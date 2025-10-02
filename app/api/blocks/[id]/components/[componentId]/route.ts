@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongoose/connection';
 import { RoomComponent } from '@/lib/mongoose/models/room-component.model';
+import { RoomType } from '@/lib/mongoose/models/room-type.model';
 
 export async function PUT(
   request: NextRequest,
@@ -51,7 +52,8 @@ export async function DELETE(
 
     const { id: blockId, componentId } = params;
 
-    const component = await RoomComponent.findOneAndDelete({
+    // Check if component exists
+    const component = await RoomComponent.findOne({
       _id: componentId,
       blockId,
     });
@@ -63,7 +65,34 @@ export async function DELETE(
       );
     }
 
-    return NextResponse.json({ success: true, data: component });
+    // Check if any room types are using this component
+    const roomTypesUsingComponent = await RoomType.countDocuments({
+      blockId,
+      components: componentId,
+    });
+
+    if (roomTypesUsingComponent > 0) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Cannot delete component. It is being used by ${roomTypesUsingComponent} room type(s). Please remove this component from all room types first.`,
+          roomTypesUsingComponent 
+        },
+        { status: 400 }
+      );
+    }
+
+    // If no room types are using this component, proceed with deletion
+    await RoomComponent.findOneAndDelete({
+      _id: componentId,
+      blockId,
+    });
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Component deleted successfully',
+      data: component 
+    });
   } catch (error: any) {
     return NextResponse.json(
       { success: false, error: error.message },
