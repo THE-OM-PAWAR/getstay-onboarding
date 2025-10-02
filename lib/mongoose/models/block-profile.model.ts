@@ -8,6 +8,31 @@ interface BlockPhoto {
   isMain?: boolean;
 }
 
+interface Landmark {
+  name: string;
+  distance: string;
+  type: 'hospital' | 'school' | 'market' | 'transport' | 'other';
+}
+
+interface Transport {
+  mode: 'bus' | 'metro' | 'train' | 'auto';
+  distance: string;
+  details: string;
+}
+
+interface Amenity {
+  name: string;
+  available: boolean;
+  description?: string;
+  floor?: string;
+}
+
+interface SafetyFeature {
+  feature: string;
+  available: boolean;
+  details?: string;
+}
+
 export interface IBlockProfile extends Document {
   block: mongoose.Types.ObjectId;
   basicInfo: {
@@ -32,32 +57,15 @@ export interface IBlockProfile extends Document {
     googleMapLink?: string;
     latitude?: number;
     longitude?: number;
-    nearbyLandmarks: Array<{
-      name: string;
-      distance: string;
-      type: 'hospital' | 'school' | 'market' | 'transport' | 'other';
-    }>;
-    transportConnectivity: Array<{
-      mode: 'bus' | 'metro' | 'train' | 'auto';
-      distance: string;
-      details: string;
-    }>;
+    nearbyLandmarks: Landmark[];
+    transportConnectivity: Transport[];
   };
   media: {
     photos: BlockPhoto[];
     virtualTourLink?: string;
   };
-  amenities: Array<{
-    name: string;
-    available: boolean;
-    description?: string;
-    floor?: string;
-  }>;
-  safetyFeatures: Array<{
-    feature: string;
-    available: boolean;
-    details?: string;
-  }>;
+  amenities: Amenity[];
+  safetyFeatures: SafetyFeature[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -74,6 +82,39 @@ const blockPhotoSchema = new Schema({
   isMain: { type: Boolean, default: false },
 });
 
+const landmarkSchema = new Schema({
+  name: { type: String, required: true },
+  distance: { type: String, required: true },
+  type: {
+    type: String,
+    enum: ['hospital', 'school', 'market', 'transport', 'other'],
+    required: true,
+  },
+});
+
+const transportSchema = new Schema({
+  mode: {
+    type: String,
+    enum: ['bus', 'metro', 'train', 'auto'],
+    required: true,
+  },
+  distance: { type: String, required: true },
+  details: { type: String, required: true },
+});
+
+const amenitySchema = new Schema({
+  name: { type: String, required: true },
+  available: { type: Boolean, default: false },
+  description: { type: String },
+  floor: { type: String },
+});
+
+const safetyFeatureSchema = new Schema({
+  feature: { type: String, required: true },
+  available: { type: Boolean, default: false },
+  details: { type: String },
+});
+
 const blockProfileSchema = new Schema<IBlockProfile>(
   {
     block: {
@@ -86,7 +127,7 @@ const blockProfileSchema = new Schema<IBlockProfile>(
       name: { type: String, required: true },
       description: { type: String, default: '' },
       address: { type: String, required: true },
-      landmark: { type: String, default: '' },
+      landmark: { type: String },
       city: { type: String, required: true },
       state: { type: String, required: true },
       pincode: { type: String, required: true },
@@ -101,7 +142,7 @@ const blockProfileSchema = new Schema<IBlockProfile>(
         enum: ['boys', 'girls', 'coed', 'separate'],
         required: true,
       },
-      establishedYear: { type: Number },
+      establishedYear: { type: Number, min: 1900, max: new Date().getFullYear() },
       buildingType: {
         type: String,
         enum: ['independent', 'apartment', 'commercial'],
@@ -112,40 +153,15 @@ const blockProfileSchema = new Schema<IBlockProfile>(
       googleMapLink: { type: String },
       latitude: { type: Number },
       longitude: { type: Number },
-      nearbyLandmarks: [{
-        name: { type: String, required: true },
-        distance: { type: String, required: true },
-        type: {
-          type: String,
-          enum: ['hospital', 'school', 'market', 'transport', 'other'],
-          required: true,
-        },
-      }],
-      transportConnectivity: [{
-        mode: {
-          type: String,
-          enum: ['bus', 'metro', 'train', 'auto'],
-          required: true,
-        },
-        distance: { type: String, required: true },
-        details: { type: String, required: true },
-      }],
+      nearbyLandmarks: [landmarkSchema],
+      transportConnectivity: [transportSchema],
     },
     media: {
       photos: [blockPhotoSchema],
       virtualTourLink: { type: String },
     },
-    amenities: [{
-      name: { type: String, required: true },
-      available: { type: Boolean, default: true },
-      description: { type: String },
-      floor: { type: String },
-    }],
-    safetyFeatures: [{
-      feature: { type: String, required: true },
-      available: { type: Boolean, default: true },
-      details: { type: String },
-    }],
+    amenities: [amenitySchema],
+    safetyFeatures: [safetyFeatureSchema],
   },
   {
     timestamps: true,

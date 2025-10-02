@@ -1,14 +1,36 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { 
+  Globe, 
+  Building2, 
+  MapPin, 
+  Phone, 
+  Mail, 
+  Users, 
+  Utensils, 
+  Shield, 
+  Wifi, 
+  Car, 
+  Zap, 
+  Droplets,
+  Camera,
+  Upload,
+  X,
+  Plus,
+  Trash2,
+  ExternalLink,
+  ArrowLeft,
+  Save
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
 import {
   Select,
   SelectContent,
@@ -16,8 +38,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Save, Plus, Trash2, ExternalLink } from 'lucide-react';
-import { toast } from 'sonner';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Separator } from '@/components/ui/separator';
 
 interface Facility {
   name: string;
@@ -33,14 +55,14 @@ interface LocationFactor {
 
 interface HostelProfile {
   _id?: string;
-  hostel: string;
+  hostel?: string;
   isOnlinePresenceEnabled: boolean;
   basicInfo: {
     name: string;
     address: string;
     landmark: string;
     city: string;
-    state: string;
+    state?: string;
     pincode: string;
     contactNumber: string;
     email: string;
@@ -67,183 +89,240 @@ interface HostelProfile {
   };
 }
 
+const defaultFacilities: Facility[] = [
+  { name: "Wi-Fi", available: false, details: "" },
+  { name: "Laundry Service", available: false, details: "" },
+  { name: "AC Rooms", available: false, details: "" },
+  { name: "Non-AC Rooms", available: false, details: "" },
+  { name: "Power Backup", available: false, details: "" },
+  { name: "Housekeeping", available: false, details: "" },
+  { name: "RO Water", available: false, details: "" },
+  { name: "CCTV Security", available: false, details: "" },
+  { name: "Security Guard", available: false, details: "" },
+  { name: "Warden", available: false, details: "" },
+  { name: "Parking", available: false, details: "" },
+  { name: "Common Room", available: false, details: "" },
+  { name: "Study Room", available: false, details: "" },
+  { name: "Gym", available: false, details: "" },
+  { name: "Recreation Area", available: false, details: "" },
+  { name: "Medical Facility", available: false, details: "" },
+];
+
 export default function HostelProfilePage() {
   const router = useRouter();
   const params = useParams();
   const hostelId = params.id as string;
 
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useState<HostelProfile>({
-    hostel: hostelId,
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  
+  const [profile, setProfile] = useState<HostelProfile>({
     isOnlinePresenceEnabled: false,
     basicInfo: {
-      name: '',
-      address: '',
-      landmark: '',
-      city: '',
-      state: '',
-      pincode: '',
-      contactNumber: '',
-      email: '',
+      name: "",
+      address: "",
+      landmark: "",
+      city: "",
+      state: "",
+      pincode: "",
+      contactNumber: "",
+      email: "",
     },
     propertyDetails: {
       type: 'boys',
-      facilities: [
-        { name: 'Wi-Fi', available: false, details: '' },
-        { name: 'Laundry Service', available: false, details: '' },
-        { name: 'AC Rooms', available: false, details: '' },
-        { name: 'Non-AC Rooms', available: false, details: '' },
-        { name: 'Power Backup', available: false, details: '' },
-        { name: 'Housekeeping', available: false, details: '' },
-        { name: 'RO Water', available: false, details: '' },
-        { name: 'CCTV Security', available: false, details: '' },
-        { name: 'Security Guard', available: false, details: '' },
-        { name: 'Warden', available: false, details: '' },
-        { name: 'Parking', available: false, details: '' },
-        { name: 'Common Room', available: false, details: '' },
-        { name: 'Study Room', available: false, details: '' },
-        { name: 'Gym', available: false, details: '' },
-        { name: 'Recreation Area', available: false, details: '' },
-        { name: 'Medical Facility', available: false, details: '' },
-      ],
+      facilities: defaultFacilities,
       foodService: {
         available: false,
-        type: 'veg',
-        details: '',
+        type: undefined,
+        details: "",
       },
     },
-    rulesAndPolicies: '',
+    rulesAndPolicies: "",
     media: {
-      bannerImage: '',
-      profileImage: '',
+      bannerImage: "",
+      profileImage: "",
       galleryImages: [],
     },
     locationFactors: {
       nearbyLandmarks: [],
-      googleMapLink: '',
+      googleMapLink: "",
       coachingCenters: [],
     },
   });
 
   useEffect(() => {
-    fetchProfile();
+    fetchHostelProfile();
   }, [hostelId]);
 
-  const fetchProfile = async () => {
+  const fetchHostelProfile = async () => {
+    if (!hostelId) return;
+    
     try {
-      const response = await fetch(`/api/hostel-profile/${hostelId}`);
-      const data = await response.json();
-
-      if (data.success) {
-        setFormData(data.data);
+      // Get hostel profile
+      const profileResponse = await fetch(`/api/hostel-profile/${hostelId}`);
+      
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json();
+        if (profileData.success) {
+          setProfile(profileData.data);
+        }
+      } else {
+        // If no profile exists, use default
+        console.log("No profile found, using defaults");
       }
     } catch (error) {
+      console.error("Error fetching hostel profile:", error);
+      toast.error("Failed to load hostel profile");
     } finally {
       setLoading(false);
     }
   };
 
-  const updateFacility = (index: number, field: keyof Facility, value: any) => {
-    const updatedFacilities = [...formData.propertyDetails.facilities];
-    updatedFacilities[index] = { ...updatedFacilities[index], [field]: value };
-    setFormData({
-      ...formData,
-      propertyDetails: {
-        ...formData.propertyDetails,
-        facilities: updatedFacilities,
-      },
-    });
-  };
-
-  const addLandmark = () => {
-    setFormData({
-      ...formData,
-      locationFactors: {
-        ...formData.locationFactors,
-        nearbyLandmarks: [
-          ...formData.locationFactors.nearbyLandmarks,
-          { name: '', distance: '', description: '' },
-        ],
-      },
-    });
-  };
-
-  const removeLandmark = (index: number) => {
-    const updatedLandmarks = formData.locationFactors.nearbyLandmarks.filter(
-      (_, i) => i !== index
-    );
-    setFormData({
-      ...formData,
-      locationFactors: {
-        ...formData.locationFactors,
-        nearbyLandmarks: updatedLandmarks,
-      },
-    });
-  };
-
-  const addCoachingCenter = () => {
-    setFormData({
-      ...formData,
-      locationFactors: {
-        ...formData.locationFactors,
-        coachingCenters: [
-          ...formData.locationFactors.coachingCenters,
-          { name: '', distance: '', description: '' },
-        ],
-      },
-    });
-  };
-
-  const removeCoachingCenter = (index: number) => {
-    const updatedCenters = formData.locationFactors.coachingCenters.filter(
-      (_, i) => i !== index
-    );
-    setFormData({
-      ...formData,
-      locationFactors: {
-        ...formData.locationFactors,
-        coachingCenters: updatedCenters,
-      },
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-
+  const handleSave = async () => {
+    setSaving(true);
     try {
       const response = await fetch(`/api/hostel-profile/${hostelId}`, {
-        method: formData._id ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        method: profile._id ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(profile),
       });
 
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error("Failed to save profile");
+      }
 
+      const data = await response.json();
       if (data.success) {
-        toast.success('Profile saved successfully');
+        toast.success("Hostel profile updated successfully");
         router.push(`/hostel/${hostelId}`);
       } else {
-        toast.error(data.error || 'Failed to save profile');
+        toast.error(data.error || "Failed to save profile");
       }
     } catch (error) {
-      toast.error('Failed to save profile');
+      toast.error("Failed to save hostel profile");
     } finally {
-      setSubmitting(false);
+      setSaving(false);
     }
+  };
+
+  const handleImageUpload = async (file: File, type: 'banner' | 'profile') => {
+    setUploading(true);
+    try {
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error("File size must be less than 5MB");
+      }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        throw new Error("Please select a valid image file");
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "hostel-profiles");
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to upload image");
+      }
+
+      setProfile(prev => ({
+        ...prev,
+        media: {
+          ...prev.media,
+          [type === 'banner' ? 'bannerImage' : 'profileImage']: result.secure_url,
+        }
+      }));
+
+      toast.success("Image uploaded successfully");
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      toast.error(error.message || "Failed to upload image");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const addLocationFactor = (type: 'nearbyLandmarks' | 'coachingCenters') => {
+    setProfile(prev => ({
+      ...prev,
+      locationFactors: {
+        ...prev.locationFactors,
+        [type]: [
+          ...prev.locationFactors[type],
+          { name: "", distance: "", description: "" }
+        ]
+      }
+    }));
+  };
+
+  const removeLocationFactor = (type: 'nearbyLandmarks' | 'coachingCenters', index: number) => {
+    setProfile(prev => ({
+      ...prev,
+      locationFactors: {
+        ...prev.locationFactors,
+        [type]: prev.locationFactors[type].filter((_, i) => i !== index)
+      }
+    }));
+  };
+
+  const updateLocationFactor = (
+    type: 'nearbyLandmarks' | 'coachingCenters', 
+    index: number, 
+    field: keyof LocationFactor, 
+    value: string
+  ) => {
+    setProfile(prev => ({
+      ...prev,
+      locationFactors: {
+        ...prev.locationFactors,
+        [type]: prev.locationFactors[type].map((item, i) => 
+          i === index ? { ...item, [field]: value } : item
+        )
+      }
+    }));
+  };
+
+  const updateFacility = (index: number, field: keyof Facility, value: boolean | string) => {
+    setProfile(prev => ({
+      ...prev,
+      propertyDetails: {
+        ...prev.propertyDetails,
+        facilities: prev.propertyDetails.facilities.map((facility, i) =>
+          i === index ? { ...facility, [field]: value } : facility
+        )
+      }
+    }));
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="space-y-8">
+        <div>
+          <div className="h-10 w-64 bg-gray-200 rounded animate-pulse" />
+          <div className="h-6 w-96 mt-2 bg-gray-200 rounded animate-pulse" />
+        </div>
+        <div className="space-y-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-32 bg-gray-200 rounded animate-pulse" />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
+    <div className="space-y-8">
       <Button
         variant="ghost"
         className="mb-6 gap-2"
@@ -253,540 +332,595 @@ export default function HostelProfilePage() {
         Back to Hostel
       </Button>
 
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold tracking-tight">Hostel Profile</h1>
+      <div>
+        <h1 className="text-3xl font-bold">Hostel Profile</h1>
         <p className="text-muted-foreground mt-2">
-          Manage hostel profile information
+          Manage your hostel&apos;s online presence and showcase your property
         </p>
       </div>
 
-      <form onSubmit={handleSubmit}>
-        {/* Online Presence */}
-        <Card className="mb-6">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Online Presence</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Make your hostel visible online with a public profile page
-                </p>
-              </div>
-              <Switch
-                checked={formData.isOnlinePresenceEnabled}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, isOnlinePresenceEnabled: checked })
-                }
-              />
+      {/* Online Presence Toggle */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5" />
+            Online Presence
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-medium">Enable Online Presence</h3>
+              <p className="text-sm text-muted-foreground">
+                Make your hostel visible online with a public profile page
+              </p>
             </div>
-          </CardHeader>
-        </Card>
+            <Switch
+              checked={profile.isOnlinePresenceEnabled}
+              onCheckedChange={(checked) => 
+                setProfile(prev => ({ ...prev, isOnlinePresenceEnabled: checked }))
+              }
+            />
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Basic Information */}
-        <Card className="mb-6">
+      {profile.isOnlinePresenceEnabled && (
+        <div className="space-y-8">
+          {/* Basic Information */}
+          <Card>
           <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Basic Information
+              </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Hostel Name</Label>
+                  <Label htmlFor="hostelName">Hostel Name</Label>
+                  <Input
+                    id="hostelName"
+                    value={profile.basicInfo.name}
+                    onChange={(e) => setProfile(prev => ({
+                      ...prev,
+                      basicInfo: { ...prev.basicInfo, name: e.target.value }
+                    }))}
+                    placeholder="Enter hostel name"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="landmark">Landmark/Area</Label>
                 <Input
-                  id="name"
-                  value={formData.basicInfo.name}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      basicInfo: { ...formData.basicInfo, name: e.target.value },
-                    })
-                  }
-                  required
-                />
+                    id="landmark"
+                    value={profile.basicInfo.landmark}
+                    onChange={(e) => setProfile(prev => ({
+                      ...prev,
+                      basicInfo: { ...prev.basicInfo, landmark: e.target.value }
+                    }))}
+                    placeholder="Enter landmark or area"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="landmark">Landmark/Area</Label>
-                <Input
-                  id="landmark"
-                  value={formData.basicInfo.landmark}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      basicInfo: { ...formData.basicInfo, landmark: e.target.value },
-                    })
-                  }
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="address">Full Address</Label>
-              <Input
-                id="address"
-                value={formData.basicInfo.address}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    basicInfo: { ...formData.basicInfo, address: e.target.value },
-                  })
-                }
-                required
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="city">City</Label>
-                <Input
-                  id="city"
-                  value={formData.basicInfo.city}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      basicInfo: { ...formData.basicInfo, city: e.target.value },
-                    })
-                  }
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="state">State</Label>
-                <Input
-                  id="state"
-                  value={formData.basicInfo.state}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      basicInfo: { ...formData.basicInfo, state: e.target.value },
-                    })
-                  }
-                  required
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="pincode">PIN Code</Label>
-                <Input
-                  id="pincode"
-                  value={formData.basicInfo.pincode}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      basicInfo: { ...formData.basicInfo, pincode: e.target.value },
-                    })
-                  }
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="contact">Contact Number</Label>
-                <Input
-                  id="contact"
-                  value={formData.basicInfo.contactNumber}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      basicInfo: {
-                        ...formData.basicInfo,
-                        contactNumber: e.target.value,
-                      },
-                    })
-                  }
-                  required
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.basicInfo.email}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    basicInfo: { ...formData.basicInfo, email: e.target.value },
-                  })
-                }
-                required
-              />
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Property Details */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Property Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="type">Hostel Type</Label>
-              <Select
-                value={formData.propertyDetails.type}
-                onValueChange={(value: any) =>
-                  setFormData({
-                    ...formData,
-                    propertyDetails: { ...formData.propertyDetails, type: value },
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="boys">Boys Only</SelectItem>
-                  <SelectItem value="girls">Girls Only</SelectItem>
-                  <SelectItem value="coed">Co-ed</SelectItem>
-                  <SelectItem value="separate">Separate Buildings</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="address">Full Address</Label>
+                <Textarea
+                  id="address"
+                  value={profile.basicInfo.address}
+                  onChange={(e) => setProfile(prev => ({
+                    ...prev,
+                    basicInfo: { ...prev.basicInfo, address: e.target.value }
+                  }))}
+                  placeholder="Enter complete address"
+                  rows={3}
+                />
+              </div>
 
-            <div className="space-y-4">
-              <Label>Facilities & Amenities</Label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {formData.propertyDetails.facilities.map((facility, index) => (
-                  <div key={index} className="flex items-center space-x-3">
-                    <Checkbox
-                      checked={facility.available}
-                      onCheckedChange={(checked) =>
-                        updateFacility(index, 'available', checked)
-                      }
-                    />
-                    <div className="flex-1">
-                      <Label className="text-sm font-medium">{facility.name}</Label>
-                      {facility.available && (
-                        <Input
-                          placeholder="Details"
-                          value={facility.details || ''}
-                          onChange={(e) =>
-                            updateFacility(index, 'details', e.target.value)
+                <div className="space-y-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input
+                    id="city"
+                    value={profile.basicInfo.city}
+                    onChange={(e) => setProfile(prev => ({
+                      ...prev,
+                      basicInfo: { ...prev.basicInfo, city: e.target.value }
+                    }))}
+                    placeholder="Enter city"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="state">State</Label>
+                  <Input
+                    id="state"
+                    value={profile.basicInfo.state || ""}
+                    onChange={(e) => setProfile(prev => ({
+                      ...prev,
+                      basicInfo: { ...prev.basicInfo, state: e.target.value }
+                    }))}
+                    placeholder="Enter state"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="pincode">PIN Code</Label>
+                  <Input
+                    id="pincode"
+                    value={profile.basicInfo.pincode}
+                    onChange={(e) => setProfile(prev => ({
+                      ...prev,
+                      basicInfo: { ...prev.basicInfo, pincode: e.target.value }
+                    }))}
+                    placeholder="Enter PIN code"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="contactNumber">Contact Number</Label>
+                  <Input
+                    id="contactNumber"
+                    value={profile.basicInfo.contactNumber}
+                    onChange={(e) => setProfile(prev => ({
+                      ...prev,
+                      basicInfo: { ...prev.basicInfo, contactNumber: e.target.value }
+                    }))}
+                    placeholder="Enter contact number"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={profile.basicInfo.email}
+                  onChange={(e) => setProfile(prev => ({
+                    ...prev,
+                    basicInfo: { ...prev.basicInfo, email: e.target.value }
+                  }))}
+                  placeholder="Enter email address"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Property Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Property Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label>Hostel Type</Label>
+                <Select
+                  value={profile.propertyDetails.type}
+                  onValueChange={(value: 'boys' | 'girls' | 'coed' | 'separate') => 
+                    setProfile(prev => ({
+                      ...prev,
+                      propertyDetails: { ...prev.propertyDetails, type: value }
+                    }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select hostel type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="boys">Boys Only</SelectItem>
+                    <SelectItem value="girls">Girls Only</SelectItem>
+                    <SelectItem value="coed">Co-ed (Mixed)</SelectItem>
+                    <SelectItem value="separate">Separate Boys & Girls Hostels</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-4">
+                <Label>Facilities & Amenities</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {profile.propertyDetails.facilities.map((facility, index) => (
+                    <div key={facility.name} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <Checkbox
+                          checked={facility.available}
+                          onCheckedChange={(checked) => 
+                            updateFacility(index, 'available', checked as boolean)
                           }
-                          className="mt-1"
+                        />
+                        <span className="font-medium">{facility.name}</span>
+            </div>
+                      {facility.available && (
+              <Input
+                          placeholder="Details"
+                          value={facility.details || ""}
+                          onChange={(e) => updateFacility(index, 'details', e.target.value)}
+                          className="w-32 h-8"
                         />
                       )}
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>Food/Mess Service</Label>
-                <Switch
-                  checked={formData.propertyDetails.foodService.available}
-                  onCheckedChange={(checked) =>
-                    setFormData({
-                      ...formData,
-                      propertyDetails: {
-                        ...formData.propertyDetails,
-                        foodService: {
-                          ...formData.propertyDetails.foodService,
-                          available: checked,
-                        },
-                      },
-                    })
-                  }
-                />
-              </div>
-              {formData.propertyDetails.foodService.available && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Food Type</Label>
-                    <Select
-                      value={formData.propertyDetails.foodService.type}
-                      onValueChange={(value: any) =>
-                        setFormData({
-                          ...formData,
-                          propertyDetails: {
-                            ...formData.propertyDetails,
-                            foodService: {
-                              ...formData.propertyDetails.foodService,
-                              type: value,
-                            },
-                          },
-                        })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="veg">Vegetarian Only</SelectItem>
-                        <SelectItem value="nonveg">Non-Vegetarian Only</SelectItem>
-                        <SelectItem value="both">Both</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Food Service Details</Label>
-                    <Textarea
-                      placeholder="Describe your food service..."
-                      value={formData.propertyDetails.foodService.details || ''}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          propertyDetails: {
-                            ...formData.propertyDetails,
-                            foodService: {
-                              ...formData.propertyDetails.foodService,
-                              details: e.target.value,
-                            },
-                          },
-                        })
-                      }
-                    />
-                  </div>
+                  ))}
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              </div>
 
-        {/* Rules & Policies */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Rules & Policies</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="rules">Rules & Policies (Markdown supported)</Label>
-              <Textarea
-                id="rules"
-                placeholder="Enter your hostel rules and policies..."
-                value={formData.rulesAndPolicies}
-                onChange={(e) =>
-                  setFormData({ ...formData, rulesAndPolicies: e.target.value })
-                }
-                rows={6}
+              <Separator />
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Food/Mess Service</Label>
+                    <p className="text-sm text-muted-foreground">Does your hostel provide food service?</p>
+                  </div>
+                  <Switch
+                    checked={profile.propertyDetails.foodService.available}
+                    onCheckedChange={(checked) => 
+                      setProfile(prev => ({
+                        ...prev,
+                        propertyDetails: {
+                          ...prev.propertyDetails,
+                          foodService: { ...prev.propertyDetails.foodService, available: checked }
+                        }
+                      }))
+                    }
               />
-              <p className="text-sm text-muted-foreground">
-                You can use Markdown syntax for formatting (e.g., **bold**, *italic*, bullet points)
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Photos & Media */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Photos & Media</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Banner Image (3:1 ratio)</Label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <p className="text-muted-foreground">Upload banner image</p>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  className="mt-2"
-                  onChange={(e) => {
-                    // Handle file upload logic here
-                  }}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Profile Image (1:1 ratio)</Label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <p className="text-muted-foreground">Upload profile image</p>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  className="mt-2"
-                  onChange={(e) => {
-                    // Handle file upload logic here
-                  }}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Location Factors */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Location Factors</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="googleMaps">Google Maps Link</Label>
-              <div className="flex space-x-2">
-                <Input
-                  id="googleMaps"
-                  placeholder="https://maps.google.com/..."
-                  value={formData.locationFactors.googleMapLink || ''}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      locationFactors: {
-                        ...formData.locationFactors,
-                        googleMapLink: e.target.value,
-                      },
-                    })
-                  }
-                />
-                <Button type="button" variant="outline" size="icon">
-                  <ExternalLink className="h-4 w-4" />
-                </Button>
-              </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>Nearby Landmarks</Label>
-                <Button type="button" variant="outline" size="sm" onClick={addLandmark}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Landmark
-                </Button>
-              </div>
-              {formData.locationFactors.nearbyLandmarks.map((landmark, index) => (
-                <div key={index} className="flex space-x-2 items-end">
-                  <div className="flex-1">
-                    <Input
-                      placeholder="Landmark name"
-                      value={landmark.name}
-                      onChange={(e) => {
-                        const updatedLandmarks = [...formData.locationFactors.nearbyLandmarks];
-                        updatedLandmarks[index] = { ...landmark, name: e.target.value };
-                        setFormData({
-                          ...formData,
-                          locationFactors: {
-                            ...formData.locationFactors,
-                            nearbyLandmarks: updatedLandmarks,
-                          },
-                        });
-                      }}
-                    />
+                {profile.propertyDetails.foodService.available && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Food Type</Label>
+                      <Select
+                        value={profile.propertyDetails.foodService.type}
+                        onValueChange={(value: 'veg' | 'nonveg' | 'both') => 
+                          setProfile(prev => ({
+                            ...prev,
+                            propertyDetails: {
+                              ...prev.propertyDetails,
+                              foodService: { ...prev.propertyDetails.foodService, type: value }
+                            }
+                          }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select food type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="veg">Vegetarian Only</SelectItem>
+                          <SelectItem value="nonveg">Non-Vegetarian Only</SelectItem>
+                          <SelectItem value="both">Both Veg & Non-Veg</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+              <div className="space-y-2">
+                      <Label htmlFor="foodDetails">Food Service Details</Label>
+                <Input
+                        id="foodDetails"
+                        value={profile.propertyDetails.foodService.details || ""}
+                        onChange={(e) => setProfile(prev => ({
+                          ...prev,
+                          propertyDetails: {
+                            ...prev.propertyDetails,
+                            foodService: { ...prev.propertyDetails.foodService, details: e.target.value }
+                          }
+                        }))}
+                        placeholder="e.g., 3 meals a day, breakfast included"
+                      />
+                    </div>
                   </div>
-                  <div className="w-20">
-                    <Input
-                      placeholder="Distance"
-                      value={landmark.distance}
-                      onChange={(e) => {
-                        const updatedLandmarks = [...formData.locationFactors.nearbyLandmarks];
-                        updatedLandmarks[index] = { ...landmark, distance: e.target.value };
-                        setFormData({
-                          ...formData,
-                          locationFactors: {
-                            ...formData.locationFactors,
-                            nearbyLandmarks: updatedLandmarks,
-                          },
-                        });
-                      }}
-                    />
-                  </div>
-                  <div className="w-32">
-                    <Select
-                      value={landmark.description || ''}
-                      onValueChange={(value) => {
-                        const updatedLandmarks = [...formData.locationFactors.nearbyLandmarks];
-                        updatedLandmarks[index] = { ...landmark, description: value };
-                        setFormData({
-                          ...formData,
-                          locationFactors: {
-                            ...formData.locationFactors,
-                            nearbyLandmarks: updatedLandmarks,
-                          },
-                        });
-                      }}
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Rules & Policies */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Rules & Policies
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label htmlFor="rules">Rules & Policies (Markdown supported)</Label>
+                <Textarea
+                  id="rules"
+                  value={profile.rulesAndPolicies}
+                  onChange={(e) => setProfile(prev => ({ ...prev, rulesAndPolicies: e.target.value }))}
+                  placeholder="Enter hostel rules and policies. You can use Markdown formatting."
+                  rows={8}
+                  className="font-mono"
+                />
+                <p className="text-xs text-muted-foreground">
+                  You can use Markdown syntax for formatting (e.g., **bold**, *italic*, - bullet points)
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Photos & Media */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Camera className="h-5 w-5" />
+                Photos & Media
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Banner Image */}
+              <div className="space-y-4">
+                <Label>Banner Image (3:1 ratio)</Label>
+                <div className="relative border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
+                  {uploading && (
+                    <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-lg z-10">
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+                        <span>Uploading...</span>
+                      </div>
+                    </div>
+                  )}
+                  {profile.media.bannerImage ? (
+                    <div className="relative">
+                      <img
+                        src={profile.media.bannerImage}
+                        alt="Banner"
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2"
+                        onClick={() => setProfile(prev => ({
+                          ...prev,
+                          media: { ...prev.media, bannerImage: "" }
+                        }))}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Upload a banner image (recommended: 1200x400px, max 5MB)
+                      </p>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            // Reset the input value so the same file can be selected again
+                            e.target.value = '';
+                            handleImageUpload(file, 'banner');
+                          }
+                        }}
+                        className="hidden"
+                        id="banner-upload"
+                        disabled={uploading}
+                      />
+                      <Button asChild variant="outline" disabled={uploading}>
+                        <label htmlFor="banner-upload" className="cursor-pointer">
+                          {uploading ? "Uploading..." : "Choose Banner Image"}
+                        </label>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Profile Image */}
+              <div className="space-y-4">
+                <Label>Profile Image (1:1 ratio)</Label>
+                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
+                  {profile.media.profileImage ? (
+                    <div className="relative w-32 h-32 mx-auto">
+                      <img
+                        src={profile.media.profileImage}
+                        alt="Profile"
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -top-2 -right-2"
+                        onClick={() => setProfile(prev => ({
+                          ...prev,
+                          media: { ...prev.media, profileImage: "" }
+                        }))}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Upload a profile image (recommended: 400x400px, max 5MB)
+                      </p>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            // Reset the input value so the same file can be selected again
+                            e.target.value = '';
+                            handleImageUpload(file, 'profile');
+                          }
+                        }}
+                        className="hidden"
+                        id="profile-upload"
+                        disabled={uploading}
+                      />
+                      <Button asChild variant="outline" disabled={uploading}>
+                        <label htmlFor="profile-upload" className="cursor-pointer">
+                          {uploading ? "Uploading..." : "Choose Profile Image"}
+                        </label>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Location Factors */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Location Factors
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="googleMapLink">Google Maps Link</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="googleMapLink"
+                    value={profile.locationFactors.googleMapLink || ""}
+                    onChange={(e) => setProfile(prev => ({
+                      ...prev,
+                      locationFactors: { ...prev.locationFactors, googleMapLink: e.target.value }
+                    }))}
+                    placeholder="Paste Google Maps link"
+                  />
+                  {profile.locationFactors.googleMapLink && (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => window.open(profile.locationFactors.googleMapLink, '_blank')}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="College">College</SelectItem>
-                        <SelectItem value="Hospital">Hospital</SelectItem>
-                        <SelectItem value="Mall">Mall</SelectItem>
-                        <SelectItem value="Station">Station</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => removeLandmark(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
-              ))}
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>Nearby Coaching Centers/Colleges</Label>
-                <Button type="button" variant="outline" size="sm" onClick={addCoachingCenter}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Center
-                </Button>
               </div>
-              {formData.locationFactors.coachingCenters.map((center, index) => (
-                <div key={index} className="flex space-x-2 items-end">
-                  <div className="flex-1">
-                    <Input
-                      placeholder="Center name"
-                      value={center.name}
-                      onChange={(e) => {
-                        const updatedCenters = [...formData.locationFactors.coachingCenters];
-                        updatedCenters[index] = { ...center, name: e.target.value };
-                        setFormData({
-                          ...formData,
-                          locationFactors: {
-                            ...formData.locationFactors,
-                            coachingCenters: updatedCenters,
-                          },
-                        });
-                      }}
-                    />
-                  </div>
-                  <div className="w-20">
-                    <Input
-                      placeholder="Distance"
-                      value={center.distance}
-                      onChange={(e) => {
-                        const updatedCenters = [...formData.locationFactors.coachingCenters];
-                        updatedCenters[index] = { ...center, distance: e.target.value };
-                        setFormData({
-                          ...formData,
-                          locationFactors: {
-                            ...formData.locationFactors,
-                            coachingCenters: updatedCenters,
-                          },
-                        });
-                      }}
-                    />
-                  </div>
+
+              <Separator />
+
+              {/* Nearby Landmarks */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>Nearby Landmarks</Label>
                   <Button
-                    type="button"
                     variant="outline"
-                    size="icon"
-                    onClick={() => removeCoachingCenter(index)}
+                    size="sm"
+                    onClick={() => addLocationFactor('nearbyLandmarks')}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Landmark
                   </Button>
                 </div>
-              ))}
+                
+                <div className="space-y-3">
+                  {profile.locationFactors.nearbyLandmarks.map((landmark, index) => (
+                    <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 border rounded-lg">
+                      <Input
+                        placeholder="Landmark name"
+                        value={landmark.name}
+                        onChange={(e) => updateLocationFactor('nearbyLandmarks', index, 'name', e.target.value)}
+                      />
+                      <Input
+                        placeholder="Distance (e.g., 500m, 2km)"
+                        value={landmark.distance}
+                        onChange={(e) => updateLocationFactor('nearbyLandmarks', index, 'distance', e.target.value)}
+                      />
+                      <div className="flex gap-2">
+                <Input
+                          placeholder="Description (optional)"
+                          value={landmark.description || ""}
+                          onChange={(e) => updateLocationFactor('nearbyLandmarks', index, 'description', e.target.value)}
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => removeLocationFactor('nearbyLandmarks', index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Coaching Centers */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>Nearby Coaching Centers/Colleges</Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addLocationFactor('coachingCenters')}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Center
+                  </Button>
+                </div>
+                
+                <div className="space-y-3">
+                  {profile.locationFactors.coachingCenters.map((center, index) => (
+                    <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 border rounded-lg">
+                      <Input
+                        placeholder="Center/College name"
+                        value={center.name}
+                        onChange={(e) => updateLocationFactor('coachingCenters', index, 'name', e.target.value)}
+                      />
+                      <Input
+                        placeholder="Distance (e.g., 1km, 15 min walk)"
+                        value={center.distance}
+                        onChange={(e) => updateLocationFactor('coachingCenters', index, 'distance', e.target.value)}
+                      />
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Description (optional)"
+                          value={center.description || ""}
+                          onChange={(e) => updateLocationFactor('coachingCenters', index, 'description', e.target.value)}
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => removeLocationFactor('coachingCenters', index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <div className="flex justify-end gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.push(`/hostel/${hostelId}`)}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={submitting} className="gap-2">
-            <Save className="h-4 w-4" />
-            {submitting ? 'Saving...' : 'Save Profile'}
+          {/* Save Button */}
+          <div className="flex justify-end">
+            <Button onClick={handleSave} disabled={saving || uploading} size="lg">
+              {saving ? "Saving..." : "Save Profile"}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Always visible save button for online presence toggle */}
+      {!profile.isOnlinePresenceEnabled && (
+        <div className="flex justify-end">
+          <Button onClick={handleSave} disabled={saving || uploading} size="lg">
+            <Save className="h-4 w-4 mr-2" />
+            {saving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
-      </form>
+      )}
     </div>
   );
 }
