@@ -6,24 +6,20 @@ interface RoomTypeImage {
   isCover: boolean;
 }
 
-export interface IRoomType extends Document {
+export interface IRoomType {
   name: string;
   description: string;
   components: mongoose.Types.ObjectId[];
   rent: number;
   blockId: string;
   images: RoomTypeImage[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-const roomTypeImageSchema = new Schema({
-  url: { type: String, required: true },
-  title: { type: String, required: true },
-  isCover: { type: Boolean, default: false },
-});
+export interface IRoomTypeDocument extends IRoomType, Document {}
 
-const roomTypeSchema = new Schema<IRoomType>(
+const roomTypeSchema = new Schema(
   {
     name: {
       type: String,
@@ -39,12 +35,6 @@ const roomTypeSchema = new Schema<IRoomType>(
       type: [Schema.Types.ObjectId],
       ref: 'RoomComponent',
       required: [true, 'Please provide at least one component'],
-      validate: {
-        validator: function(v: mongoose.Types.ObjectId[]) {
-          return Array.isArray(v) && v.length > 0;
-        },
-        message: 'At least one component is required'
-      }
     },
     rent: {
       type: Number,
@@ -55,12 +45,16 @@ const roomTypeSchema = new Schema<IRoomType>(
       type: String,
       required: [true, 'Please provide a block ID'],
     },
-    images: [roomTypeImageSchema],
+    images: [{
+      url: { type: String, required: true },
+      title: { type: String, required: true },
+      isCover: { type: Boolean, default: false },
+    }],
   },
   {
     timestamps: true,
   }
 );
 
-export const RoomType = (mongoose.models.RoomType as Model<IRoomType>) ||
-  mongoose.model<IRoomType>('RoomType', roomTypeSchema);
+export const RoomType = (mongoose.models.RoomType as Model<IRoomTypeDocument>) ||
+  mongoose.model<IRoomTypeDocument>('RoomType', roomTypeSchema);

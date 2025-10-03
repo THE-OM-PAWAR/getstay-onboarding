@@ -27,6 +27,7 @@ interface RoomType {
   components: RoomComponent[];
   rent: number;
   images: RoomTypeImage[];
+  blockId: string;
   createdAt: string;
 }
 
