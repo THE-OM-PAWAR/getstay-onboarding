@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from 'mongoose';
 
-export interface IBlock extends Document {
+export interface IBlock {
   name: string;
   description?: string;
   hostel: mongoose.Types.ObjectId;
@@ -8,11 +8,13 @@ export interface IBlock extends Document {
   rentGenerationEnabled: boolean;
   paymentGenerationType: 'global' | 'join_date_based';
   paymentVisibilityDays: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-const blockSchema = new Schema<IBlock>(
+export interface IBlockDocument extends IBlock, Document {}
+
+const blockSchema = new Schema(
   {
     name: {
       type: String,
@@ -53,5 +55,5 @@ const blockSchema = new Schema<IBlock>(
   }
 );
 
-export const Block = (mongoose.models.Block as Model<IBlock>) ||
-  mongoose.model<IBlock>('Block', blockSchema);
+export const Block = (mongoose.models.Block as Model<IBlockDocument>) ||
+  mongoose.model<IBlockDocument>('Block', blockSchema);
