@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongoose/connection';
-import { BlockProfile } from '@/lib/mongoose/models/block-profile.model';
+import { HostelProfile } from '@/lib/mongoose/models/hostel-profile.model';
 
 export async function GET(
   request: NextRequest,
@@ -9,7 +9,7 @@ export async function GET(
   try {
     await connectDB();
 
-    const profile = await BlockProfile.findOne({ block: params.id });
+    const profile = await HostelProfile.findOne({ hostel: params.id });
 
     if (!profile) {
       return NextResponse.json(
@@ -20,7 +20,7 @@ export async function GET(
 
     return NextResponse.json({ success: true, data: profile });
   } catch (error: any) {
-    console.error('Error fetching block profile:', error);
+    console.error('Error fetching hostel profile:', error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
@@ -37,7 +37,7 @@ export async function POST(
 
     const body = await request.json();
 
-    const existingProfile = await BlockProfile.findOne({ block: params.id });
+    const existingProfile = await HostelProfile.findOne({ hostel: params.id });
 
     if (existingProfile) {
       return NextResponse.json(
@@ -46,14 +46,14 @@ export async function POST(
       );
     }
 
-    const profile = await BlockProfile.create({
+    const profile = await HostelProfile.create({
       ...body,
-      block: params.id,
+      hostel: params.id,
     });
 
     return NextResponse.json({ success: true, data: profile }, { status: 201 });
   } catch (error: any) {
-    console.error('Error creating block profile:', error);
+    console.error('Error creating hostel profile:', error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
@@ -70,15 +70,15 @@ export async function PUT(
 
     const body = await request.json();
 
-    const profile = await BlockProfile.findOneAndUpdate(
-      { block: params.id },
+    const profile = await HostelProfile.findOneAndUpdate(
+      { hostel: params.id },
       body,
       { new: true, runValidators: true, upsert: true }
     );
 
     return NextResponse.json({ success: true, data: profile });
   } catch (error: any) {
-    console.error('Error updating block profile:', error);
+    console.error('Error updating hostel profile:', error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
@@ -93,7 +93,7 @@ export async function DELETE(
   try {
     await connectDB();
 
-    const profile = await BlockProfile.findOneAndDelete({ block: params.id });
+    const profile = await HostelProfile.findOneAndDelete({ hostel: params.id });
 
     if (!profile) {
       return NextResponse.json(
@@ -104,7 +104,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, data: {} });
   } catch (error: any) {
-    console.error('Error deleting block profile:', error);
+    console.error('Error deleting hostel profile:', error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }

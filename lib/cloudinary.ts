@@ -8,7 +8,7 @@ cloudinary.config({
 
 export default cloudinary;
 
-export async function uploadImage(file: string, folder: string = 'hostels') {
+export async function uploadImage(file: string, folder: string = 'organisations') {
   try {
     const result = await cloudinary.uploader.upload(file, {
       folder,

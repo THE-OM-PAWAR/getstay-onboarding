@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Hostel Management System',
-  description: 'Manage hostels, blocks, and room configurations',
+  description: 'Manage organisations, hostels, and room configurations',
 };
 
 export default function RootLayout({

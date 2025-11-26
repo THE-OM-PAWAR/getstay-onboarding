@@ -35,7 +35,7 @@ interface RoomType {
   description: string;
   components: RoomComponent[];
   rent: number;
-  blockId: string;
+  hostelId: string;
   images: RoomTypeImage[];
 }
 
@@ -55,7 +55,7 @@ export default function RoomTypesPage() {
 
   const fetchRoomTypes = async () => {
     try {
-      const response = await fetch(`/api/blocks/${params.id}/room-types`);
+      const response = await fetch(`/api/hostels/${params.id}/room-types`);
       const data = await response.json();
       
       if (data.success) {
@@ -73,7 +73,7 @@ export default function RoomTypesPage() {
 
   const handleDelete = async (roomTypeId: string) => {
     try {
-      const response = await fetch(`/api/blocks/${params.id}/room-types/${roomTypeId}`, {
+      const response = await fetch(`/api/hostels/${params.id}/room-types/${roomTypeId}`, {
         method: "DELETE",
       });
 
@@ -196,7 +196,7 @@ export default function RoomTypesPage() {
       <div>
         <h1 className="text-3xl font-bold">Room Types</h1>
         <p className="text-muted-foreground mt-2">
-          Manage different room configurations and pricing for your hostel
+          Manage different room configurations and pricing for your organisation
         </p>
       </div>
 
@@ -210,7 +210,7 @@ export default function RoomTypesPage() {
             className="pl-9 bg-background"
           />
         </div>
-        <div className="hidden sm:block">
+        <div className="hidden sm:hostel">
           <Button onClick={() => setIsCreateDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Create Room Type
@@ -255,7 +255,7 @@ export default function RoomTypesPage() {
         isOpen={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
         onSuccess={fetchRoomTypes}
-        blockId={Array.isArray(params.id) ? params.id[0] : params.id}
+        hostelId={Array.isArray(params.id) ? params.id[0] : params.id}
       />
 
       {selectedRoomType && (
@@ -267,7 +267,7 @@ export default function RoomTypesPage() {
               setSelectedRoomType(null);
             }}
             onSuccess={fetchRoomTypes}
-            blockId={Array.isArray(params.id) ? params.id[0] : params.id}
+            hostelId={Array.isArray(params.id) ? params.id[0] : params.id}
             roomType={selectedRoomType}
           />
 

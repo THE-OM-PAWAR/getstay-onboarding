@@ -7,16 +7,16 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
-    const blockId = searchParams.get('blockId');
+    const hostelId = searchParams.get('hostelId');
 
-    if (!blockId) {
+    if (!hostelId) {
       return NextResponse.json(
-        { success: false, error: 'Block ID is required' },
+        { success: false, error: 'Hostel ID is required' },
         { status: 400 }
       );
     }
 
-    const roomTypes = await RoomType.find({ blockId })
+    const roomTypes = await RoomType.find({ hostelId })
       .populate('components')
       .sort({ createdAt: -1 });
 
@@ -34,11 +34,11 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json();
-    const { name, description, components, rent, blockId, images } = body;
+    const { name, description, components, rent, hostelId, images } = body;
 
-    if (!name || !description || !components || components.length === 0 || rent === undefined || !blockId) {
+    if (!name || !description || !components || components.length === 0 || rent === undefined || !hostelId) {
       return NextResponse.json(
-        { success: false, error: 'Name, description, at least one component, rent, and block ID are required' },
+        { success: false, error: 'Name, description, at least one component, rent, and hostel ID are required' },
         { status: 400 }
       );
     }
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       description,
       components,
       rent,
-      blockId,
+      hostelId,
       images: images || [],
     });
 

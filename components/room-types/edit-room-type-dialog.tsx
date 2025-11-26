@@ -43,7 +43,7 @@ interface RoomType {
   description: string;
   components: RoomComponent[];
   rent: number;
-  blockId: string;
+  hostelId: string;
   images: RoomTypeImage[];
 }
 
@@ -51,7 +51,7 @@ interface EditRoomTypeDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  blockId: string;
+  hostelId: string;
   roomType: RoomType;
 }
 
@@ -59,7 +59,7 @@ export function EditRoomTypeDialog({
   isOpen,
   onClose,
   onSuccess,
-  blockId,
+  hostelId,
   roomType,
 }: EditRoomTypeDialogProps) {
   const [formData, setFormData] = useState({
@@ -84,11 +84,11 @@ export function EditRoomTypeDialog({
       });
       fetchComponents();
     }
-  }, [isOpen, roomType, blockId]);
+  }, [isOpen, roomType, hostelId]);
 
   const fetchComponents = async () => {
     try {
-      const response = await fetch(`/api/blocks/${blockId}/components`);
+      const response = await fetch(`/api/hostels/${hostelId}/components`);
       const data = await response.json();
       
       if (data.success) {
@@ -110,7 +110,7 @@ export function EditRoomTypeDialog({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`/api/blocks/${blockId}/room-types/${roomType._id}`, {
+      const response = await fetch(`/api/hostels/${hostelId}/room-types/${roomType._id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

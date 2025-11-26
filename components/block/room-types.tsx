@@ -27,15 +27,15 @@ interface RoomType {
   components: RoomComponent[];
   rent: number;
   images: RoomTypeImage[];
-  blockId: string;
+  hostelId: string;
   createdAt: string;
 }
 
 interface RoomTypesProps {
-  blockId: string;
+  hostelId: string;
 }
 
-export default function RoomTypes({ blockId }: RoomTypesProps) {
+export default function RoomTypes({ hostelId }: RoomTypesProps) {
   const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
   const [availableComponents, setAvailableComponents] = useState<RoomComponent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,13 +45,13 @@ export default function RoomTypes({ blockId }: RoomTypesProps) {
 
   useEffect(() => {
     fetchData();
-  }, [blockId]);
+  }, [hostelId]);
 
   const fetchData = async () => {
     try {
       const [typesRes, componentsRes] = await Promise.all([
-        fetch(`/api/blocks/${blockId}/room-types`),
-        fetch(`/api/blocks/${blockId}/components`),
+        fetch(`/api/hostels/${hostelId}/room-types`),
+        fetch(`/api/hostels/${hostelId}/components`),
       ]);
 
       const typesData = await typesRes.json();
@@ -91,7 +91,7 @@ export default function RoomTypes({ blockId }: RoomTypesProps) {
     if (!confirm('Are you sure you want to delete this room type?')) return;
 
     try {
-      const response = await fetch(`/api/blocks/${blockId}/room-types/${id}`, {
+      const response = await fetch(`/api/hostels/${hostelId}/room-types/${id}`, {
         method: 'DELETE',
       });
 
@@ -246,7 +246,7 @@ export default function RoomTypes({ blockId }: RoomTypesProps) {
         isOpen={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
         onSuccess={handleCreateSuccess}
-        blockId={blockId}
+        hostelId={hostelId}
       />
 
       {/* Edit Room Type Dialog */}
@@ -258,7 +258,7 @@ export default function RoomTypes({ blockId }: RoomTypesProps) {
             setEditingRoomType(null);
           }}
           onSuccess={handleEditSuccess}
-          blockId={blockId}
+          hostelId={hostelId}
           roomType={editingRoomType}
         />
       )}

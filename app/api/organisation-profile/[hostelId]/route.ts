@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongoose/connection';
-import { BlockProfile } from '@/lib/mongoose/models/block-profile.model';
+import { OrganisationProfile } from '@/lib/mongoose/models/organisation-profile.model';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { blockId: string } }
+  { params }: { params: { organisationId: string } }
 ) {
   try {
     await connectDB();
 
-    const profile = await BlockProfile.findOne({ block: params.blockId });
+    const profile = await OrganisationProfile.findOne({ organisation: params.organisationId });
 
     if (!profile) {
       return NextResponse.json(
@@ -29,14 +29,14 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { blockId: string } }
+  { params }: { params: { organisationId: string } }
 ) {
   try {
     await connectDB();
 
     const body = await request.json();
 
-    const existingProfile = await BlockProfile.findOne({ block: params.blockId });
+    const existingProfile = await OrganisationProfile.findOne({ organisation: params.organisationId });
 
     if (existingProfile) {
       return NextResponse.json(
@@ -45,9 +45,9 @@ export async function POST(
       );
     }
 
-    const profile = await BlockProfile.create({
+    const profile = await OrganisationProfile.create({
       ...body,
-      block: params.blockId,
+      organisation: params.organisationId,
     });
 
     return NextResponse.json({ success: true, data: profile }, { status: 201 });
@@ -61,15 +61,15 @@ export async function POST(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { blockId: string } }
+  { params }: { params: { organisationId: string } }
 ) {
   try {
     await connectDB();
 
     const body = await request.json();
 
-    const profile = await BlockProfile.findOneAndUpdate(
-      { block: params.blockId },
+    const profile = await OrganisationProfile.findOneAndUpdate(
+      { organisation: params.organisationId },
       body,
       { new: true, runValidators: true, upsert: true }
     );
@@ -85,12 +85,12 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { blockId: string } }
+  { params }: { params: { organisationId: string } }
 ) {
   try {
     await connectDB();
 
-    const profile = await BlockProfile.findOneAndDelete({ block: params.blockId });
+    const profile = await OrganisationProfile.findOneAndDelete({ organisation: params.organisationId });
 
     if (!profile) {
       return NextResponse.json(

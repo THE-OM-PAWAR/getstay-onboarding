@@ -41,14 +41,14 @@ interface CreateRoomTypeDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  blockId: string;
+  hostelId: string;
 }
 
 export function CreateRoomTypeDialog({
   isOpen,
   onClose,
   onSuccess,
-  blockId,
+  hostelId,
 }: CreateRoomTypeDialogProps) {
   const [formData, setFormData] = useState({
     name: "",
@@ -65,11 +65,11 @@ export function CreateRoomTypeDialog({
     if (isOpen) {
       fetchComponents();
     }
-  }, [isOpen, blockId]);
+  }, [isOpen, hostelId]);
 
   const fetchComponents = async () => {
     try {
-      const response = await fetch(`/api/blocks/${blockId}/components`);
+      const response = await fetch(`/api/hostels/${hostelId}/components`);
       const data = await response.json();
       
       if (data.success) {
@@ -91,7 +91,7 @@ export function CreateRoomTypeDialog({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`/api/blocks/${blockId}/room-types`, {
+      const response = await fetch(`/api/hostels/${hostelId}/room-types`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

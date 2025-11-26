@@ -10,7 +10,7 @@ export async function PUT(
   try {
     await connectDB();
 
-    const { id: blockId, componentId } = params;
+    const { id: hostelId, componentId } = params;
     const body = await request.json();
     const { name, description } = body;
 
@@ -22,7 +22,7 @@ export async function PUT(
     }
 
     const component = await RoomComponent.findOneAndUpdate(
-      { _id: componentId, blockId },
+      { _id: componentId, hostelId },
       { name, description },
       { new: true }
     );
@@ -50,12 +50,12 @@ export async function DELETE(
   try {
     await connectDB();
 
-    const { id: blockId, componentId } = params;
+    const { id: hostelId, componentId } = params;
 
     // Check if component exists
     const component = await RoomComponent.findOne({
       _id: componentId,
-      blockId,
+      hostelId,
     });
 
     if (!component) {
@@ -67,7 +67,7 @@ export async function DELETE(
 
     // Check if any room types are using this component
     const roomTypesUsingComponent = await RoomType.countDocuments({
-      blockId,
+      hostelId,
       components: componentId,
     });
 
@@ -85,7 +85,7 @@ export async function DELETE(
     // If no room types are using this component, proceed with deletion
     await RoomComponent.findOneAndDelete({
       _id: componentId,
-      blockId,
+      hostelId,
     });
 
     return NextResponse.json({ 

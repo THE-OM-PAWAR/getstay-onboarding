@@ -9,7 +9,7 @@ export async function PUT(
   try {
     await connectDB();
 
-    const { id: blockId, roomTypeId } = params;
+    const { id: hostelId, roomTypeId } = params;
     const body = await request.json();
     const { name, description, components, rent, images } = body;
 
@@ -46,7 +46,7 @@ export async function PUT(
     }
 
     const roomType = await RoomType.findOneAndUpdate(
-      { _id: roomTypeId, blockId },
+      { _id: roomTypeId, hostelId },
       {
         name,
         description,
@@ -80,11 +80,11 @@ export async function DELETE(
   try {
     await connectDB();
 
-    const { id: blockId, roomTypeId } = params;
+    const { id: hostelId, roomTypeId } = params;
 
     const roomType = await RoomType.findOneAndDelete({
       _id: roomTypeId,
-      blockId,
+      hostelId,
     });
 
     if (!roomType) {

@@ -1,16 +1,14 @@
 import mongoose, { Document, Model, Schema } from 'mongoose';
 
-export interface IRoomComponent {
+export interface IRoomComponent extends Document {
   name: string;
   description: string;
-  blockId: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  hostelId: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface IRoomComponentDocument extends IRoomComponent, Document {}
-
-const roomComponentSchema = new Schema(
+const roomComponentSchema = new Schema<IRoomComponent>(
   {
     name: {
       type: String,
@@ -22,9 +20,9 @@ const roomComponentSchema = new Schema(
       required: [true, 'Please provide a description'],
       trim: true,
     },
-    blockId: {
+    hostelId: {
       type: String,
-      required: [true, 'Please provide a block ID'],
+      required: [true, 'Please provide a hostel ID'],
     },
   },
   {
@@ -32,5 +30,5 @@ const roomComponentSchema = new Schema(
   }
 );
 
-export const RoomComponent = (mongoose.models.RoomComponent as Model<IRoomComponentDocument>) ||
-  mongoose.model<IRoomComponentDocument>('RoomComponent', roomComponentSchema);
+export const RoomComponent = (mongoose.models.RoomComponent as Model<IRoomComponent>) ||
+  mongoose.model<IRoomComponent>('RoomComponent', roomComponentSchema);

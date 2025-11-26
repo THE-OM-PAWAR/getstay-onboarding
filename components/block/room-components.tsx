@@ -26,10 +26,10 @@ interface RoomComponent {
 }
 
 interface RoomComponentsProps {
-  blockId: string;
+  hostelId: string;
 }
 
-export default function RoomComponents({ blockId }: RoomComponentsProps) {
+export default function RoomComponents({ hostelId }: RoomComponentsProps) {
   const [components, setComponents] = useState<RoomComponent[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -39,11 +39,11 @@ export default function RoomComponents({ blockId }: RoomComponentsProps) {
 
   useEffect(() => {
     fetchComponents();
-  }, [blockId]);
+  }, [hostelId]);
 
   const fetchComponents = async () => {
     try {
-      const response = await fetch(`/api/room-components?blockId=${blockId}`);
+      const response = await fetch(`/api/room-components?hostelId=${hostelId}`);
       const data = await response.json();
 
       if (data.success) {
@@ -87,7 +87,7 @@ export default function RoomComponents({ blockId }: RoomComponentsProps) {
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, blockId }),
+        body: JSON.stringify({ ...formData, hostelId }),
       });
 
       const data = await response.json();

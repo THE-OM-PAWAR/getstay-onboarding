@@ -18,7 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Plus, Building2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface Hostel {
+interface Organisation {
   _id: string;
   name: string;
   joinCode: string;
@@ -27,36 +27,36 @@ interface Hostel {
 
 export default function Dashboard() {
   const router = useRouter();
-  const [hostels, setHostels] = useState<Hostel[]>([]);
+  const [organisations, setOrganisations] = useState<Organisation[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formData, setFormData] = useState({ name: '', ownerName: '' });
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchHostels();
+    fetchOrganisations();
   }, []);
 
-  const fetchHostels = async () => {
+  const fetchOrganisations = async () => {
     try {
-      const response = await fetch('/api/hostels');
+      const response = await fetch('/api/organisations');
       const data = await response.json();
       if (data.success) {
-        setHostels(data.data);
+        setOrganisations(data.data);
       }
     } catch (error) {
-      toast.error('Failed to fetch hostels');
+      toast.error('Failed to fetch organisations');
     } finally {
       setLoading(false);
     }
   };
 
-  const createHostel = async (e: React.FormEvent) => {
+  const createOrganisation = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
 
     try {
-      const response = await fetch('/api/hostels', {
+      const response = await fetch('/api/organisations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -65,38 +65,38 @@ export default function Dashboard() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success('Hostel created successfully');
+        toast.success('Organisation created successfully');
         setDialogOpen(false);
         setFormData({ name: '', ownerName: '' });
-        fetchHostels();
+        fetchOrganisations();
       } else {
-        toast.error(data.error || 'Failed to create hostel');
+        toast.error(data.error || 'Failed to create organisation');
       }
     } catch (error) {
-      toast.error('Failed to create hostel');
+      toast.error('Failed to create organisation');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const deleteHostel = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this hostel?')) return;
+  const deleteOrganisation = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this organisation?')) return;
 
     try {
-      const response = await fetch(`/api/hostels/${id}`, {
+      const response = await fetch(`/api/organisations/${id}`, {
         method: 'DELETE',
       });
 
       const data = await response.json();
 
       if (data.success) {
-        toast.success('Hostel deleted successfully');
-        fetchHostels();
+        toast.success('Organisation deleted successfully');
+        fetchOrganisations();
       } else {
-        toast.error(data.error || 'Failed to delete hostel');
+        toast.error(data.error || 'Failed to delete organisation');
       }
     } catch (error) {
-      toast.error('Failed to delete hostel');
+      toast.error('Failed to delete organisation');
     }
   };
 
@@ -112,9 +112,9 @@ export default function Dashboard() {
     <div className="container mx-auto p-6 max-w-7xl">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight">Hostel Management</h1>
+          <h1 className="text-4xl font-bold tracking-tight">Organisation Management</h1>
           <p className="text-muted-foreground mt-2">
-            Manage your hostels, blocks, and room configurations
+            Manage your organisations, hostels, and room configurations
           </p>
         </div>
 
@@ -122,23 +122,23 @@ export default function Dashboard() {
           <DialogTrigger asChild>
             <Button size="lg" className="gap-2">
               <Plus className="h-5 w-5" />
-              Create Hostel
+              Create Organisation
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <form onSubmit={createHostel}>
+            <form onSubmit={createOrganisation}>
               <DialogHeader>
-                <DialogTitle>Create New Hostel</DialogTitle>
+                <DialogTitle>Create New Organisation</DialogTitle>
                 <DialogDescription>
-                  Add a new hostel to your management system
+                  Add a new organisation to your management system
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Hostel Name</Label>
+                  <Label htmlFor="name">Organisation Name</Label>
                   <Input
                     id="name"
-                    placeholder="Enter hostel name"
+                    placeholder="Enter organisation name"
                     value={formData.name}
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
@@ -161,7 +161,7 @@ export default function Dashboard() {
               </div>
               <DialogFooter>
                 <Button type="submit" disabled={submitting}>
-                  {submitting ? 'Creating...' : 'Create Hostel'}
+                  {submitting ? 'Creating...' : 'Create Organisation'}
                 </Button>
               </DialogFooter>
             </form>
@@ -169,33 +169,33 @@ export default function Dashboard() {
         </Dialog>
       </div>
 
-      {hostels.length === 0 ? (
+      {organisations.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Building2 className="h-16 w-16 text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No hostels yet</h3>
+            <h3 className="text-xl font-semibold mb-2">No organisations yet</h3>
             <p className="text-muted-foreground text-center mb-6 max-w-md">
-              Get started by creating your first hostel. You can then add blocks
+              Get started by creating your first organisation. You can then add hostels
               and manage room configurations.
             </p>
             <Button onClick={() => setDialogOpen(true)} className="gap-2">
               <Plus className="h-5 w-5" />
-              Create Your First Hostel
+              Create Your First Organisation
             </Button>
           </CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {hostels.map((hostel) => (
+          {organisations.map((organisation) => (
             <Card
-              key={hostel._id}
+              key={organisation._id}
               className="hover:shadow-lg transition-all duration-200 cursor-pointer group"
-              onClick={() => router.push(`/hostel/${hostel._id}`)}
+              onClick={() => router.push(`/organisation/${organisation._id}`)}
             >
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-xl flex items-center gap-2">
                   <Building2 className="h-5 w-5 text-primary" />
-                  {hostel.name}
+                  {organisation.name}
                 </CardTitle>
                 <Button
                   variant="ghost"
@@ -203,7 +203,7 @@ export default function Dashboard() {
                   className="opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={(e) => {
                     e.stopPropagation();
-                    deleteHostel(hostel._id);
+                    deleteOrganisation(organisation._id);
                   }}
                 >
                   <Trash2 className="h-4 w-4 text-destructive" />
@@ -213,11 +213,11 @@ export default function Dashboard() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Join Code:</span>
-                    <span className="font-mono font-semibold">{hostel.joinCode}</span>
+                    <span className="font-mono font-semibold">{organisation.joinCode}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Created:</span>
-                    <span>{new Date(hostel.createdAt).toLocaleDateString()}</span>
+                    <span>{new Date(organisation.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>
               </CardContent>

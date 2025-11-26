@@ -19,7 +19,7 @@ interface EditComponentDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  blockId: string;
+  hostelId: string;
   component: {
     id: string;
     name: string;
@@ -31,7 +31,7 @@ export function EditComponentDialog({
   isOpen,
   onClose,
   onSuccess,
-  blockId,
+  hostelId,
   component,
 }: EditComponentDialogProps) {
   const [formData, setFormData] = useState({
@@ -54,7 +54,7 @@ export function EditComponentDialog({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`/api/blocks/${blockId}/components/${component.id}`, {
+      const response = await fetch(`/api/hostels/${hostelId}/components/${component.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

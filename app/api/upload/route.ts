@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
     const base64 = `data:${file.type};base64,${buffer.toString('base64')}`;
 
-    const result = await uploadImage(base64, folder || 'hostels');
+    const result = await uploadImage(base64, folder || 'organisations');
 
     return NextResponse.json({ 
       success: true, 

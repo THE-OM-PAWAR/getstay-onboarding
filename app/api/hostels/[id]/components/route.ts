@@ -9,16 +9,16 @@ export async function GET(
   try {
     await connectDB();
 
-    const blockId = params.id;
+    const hostelId = params.id;
 
-    if (!blockId) {
+    if (!hostelId) {
       return NextResponse.json(
-        { success: false, error: 'Block ID is required' },
+        { success: false, error: 'Hostel ID is required' },
         { status: 400 }
       );
     }
 
-    const components = await RoomComponent.find({ blockId }).sort({ createdAt: -1 });
+    const components = await RoomComponent.find({ hostelId }).sort({ createdAt: -1 });
 
     return NextResponse.json({ success: true, data: components });
   } catch (error: any) {
@@ -36,7 +36,7 @@ export async function POST(
   try {
     await connectDB();
 
-    const blockId = params.id;
+    const hostelId = params.id;
     const body = await request.json();
     const { name, description } = body;
 
@@ -47,9 +47,9 @@ export async function POST(
       );
     }
 
-    if (!blockId) {
+    if (!hostelId) {
       return NextResponse.json(
-        { success: false, error: 'Block ID is required' },
+        { success: false, error: 'Hostel ID is required' },
         { status: 400 }
       );
     }
@@ -57,7 +57,7 @@ export async function POST(
     const component = await RoomComponent.create({
       name,
       description,
-      blockId,
+      hostelId,
     });
 
     return NextResponse.json({ success: true, data: component }, { status: 201 });

@@ -20,7 +20,7 @@ interface RoomComponent {
   _id: string;
   name: string;
   description: string;
-  blockId: string;
+  hostelId: string;
 }
 
 export default function RoomComponentsPage() {
@@ -39,7 +39,7 @@ export default function RoomComponentsPage() {
 
   const fetchComponents = async () => {
     try {
-      const response = await fetch(`/api/blocks/${params.id}/components`);
+      const response = await fetch(`/api/hostels/${params.id}/components`);
       const data = await response.json();
       
       if (data.success) {
@@ -57,7 +57,7 @@ export default function RoomComponentsPage() {
 
   const handleDelete = async (componentId: string) => {
     try {
-      const response = await fetch(`/api/blocks/${params.id}/components/${componentId}`, {
+      const response = await fetch(`/api/hostels/${params.id}/components/${componentId}`, {
         method: "DELETE",
       });
 
@@ -125,7 +125,7 @@ export default function RoomComponentsPage() {
       <div>
         <h1 className="text-3xl font-bold">Room Components</h1>
         <p className="text-muted-foreground mt-2">
-          Manage and organize room components for your hostel
+          Manage and organize room components for your organisation
         </p>
       </div>
 
@@ -139,7 +139,7 @@ export default function RoomComponentsPage() {
             className="pl-9 bg-background"
           />
         </div>
-        <div className="hidden sm:block">
+        <div className="hidden sm:hostel">
           <Button onClick={() => setIsCreateDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Create Component
@@ -184,7 +184,7 @@ export default function RoomComponentsPage() {
         isOpen={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
         onSuccess={fetchComponents}
-        blockId={Array.isArray(params.id) ? params.id[0] : params.id}
+        hostelId={Array.isArray(params.id) ? params.id[0] : params.id}
       />
 
       {selectedComponent && (
@@ -196,7 +196,7 @@ export default function RoomComponentsPage() {
               setSelectedComponent(null);
             }}
             onSuccess={fetchComponents}
-            blockId={Array.isArray(params.id) ? params.id[0] : params.id}
+            hostelId={Array.isArray(params.id) ? params.id[0] : params.id}
             component={{
               id: selectedComponent._id,
               name: selectedComponent.name,
