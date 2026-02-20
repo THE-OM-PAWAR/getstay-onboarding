@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Plus, Building, Trash2, Settings } from 'lucide-react';
+import { ArrowLeft, Plus, Building, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Hostel {
@@ -153,14 +153,6 @@ export default function OrganisationDetailPage() {
         </div>
 
         <div className="flex gap-3">
-          <Button
-            variant="outline"
-            className="gap-2"
-            onClick={() => router.push(`/organisation/${organisationId}/profile`)}
-          >
-            <Settings className="h-4 w-4" />
-            Manage Profile
-          </Button>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button size="lg" className="gap-2">

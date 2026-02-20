@@ -8,4 +8,3 @@ export * from './maintenance.model';
 export * from './room-component.model';
 export * from './room-type.model';
 export * from './rentPayment.model';
-export * from './organisation-profile.model';

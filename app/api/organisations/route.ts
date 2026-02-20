@@ -31,12 +31,18 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
-    // Use a consistent dummy ObjectId for demo purposes
+    // Fetch all organisations but mark which ones belong to the current user
     const dummyOwnerId = new mongoose.Types.ObjectId(DUMMY_OWNER_ID);
-    const organisations = await Organisation.find({ owner: dummyOwnerId })
+    const organisations = await Organisation.find({})
       .sort({ createdAt: -1 });
 
-    return NextResponse.json({ success: true, data: organisations });
+    // Add isOwner flag to each organisation
+    const organisationsWithOwnership = organisations.map(org => ({
+      ...org.toObject(),
+      isOwner: org.owner.toString() === dummyOwnerId.toString()
+    }));
+
+    return NextResponse.json({ success: true, data: organisationsWithOwnership });
   } catch (error: any) {
     console.error('Error fetching organisations:', error);
     return NextResponse.json(

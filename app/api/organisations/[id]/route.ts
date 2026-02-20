@@ -36,13 +36,24 @@ export async function PUT(
     await connectDB();
 
     const body = await request.json();
-    const { name } = body;
+    console.log('PUT request body:', body);
+    console.log('Organisation ID:', params.id);
+    
+    const { name, isOnlinePresenceEnabled } = body;
+
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (isOnlinePresenceEnabled !== undefined) updateData.isOnlinePresenceEnabled = isOnlinePresenceEnabled;
+
+    console.log('Update data:', updateData);
 
     const organisation = await Organisation.findByIdAndUpdate(
       params.id,
-      { name },
+      updateData,
       { new: true, runValidators: true }
     );
+
+    console.log('Updated organisation:', organisation);
 
     if (!organisation) {
       return NextResponse.json(
@@ -53,6 +64,7 @@ export async function PUT(
 
     return NextResponse.json({ success: true, data: organisation });
   } catch (error: any) {
+    console.error('PUT error:', error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }

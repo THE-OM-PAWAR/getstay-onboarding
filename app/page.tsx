@@ -15,14 +15,17 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Building2, Trash2 } from 'lucide-react';
+import { Plus, Building2, Trash2, Globe } from 'lucide-react';
 import { toast } from 'sonner';
+import { Switch } from '@/components/ui/switch';
 
 interface Organisation {
   _id: string;
   name: string;
   joinCode: string;
   createdAt: string;
+  isOnlinePresenceEnabled: boolean;
+  isOwner: boolean;
 }
 
 export default function Dashboard() {
@@ -97,6 +100,31 @@ export default function Dashboard() {
       }
     } catch (error) {
       toast.error('Failed to delete organisation');
+    }
+  };
+
+  const toggleOnlinePresence = async (id: string, currentStatus: boolean) => {
+    try {
+      console.log('Toggling online presence for:', id, 'Current status:', currentStatus, 'New status:', !currentStatus);
+      
+      const response = await fetch(`/api/organisations/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isOnlinePresenceEnabled: !currentStatus }),
+      });
+
+      const data = await response.json();
+      console.log('Response:', data);
+
+      if (data.success) {
+        toast.success(`Online presence ${!currentStatus ? 'enabled' : 'disabled'}`);
+        fetchOrganisations();
+      } else {
+        toast.error(data.error || 'Failed to update online presence');
+      }
+    } catch (error) {
+      console.error('Toggle error:', error);
+      toast.error('Failed to update online presence');
     }
   };
 
@@ -189,28 +217,33 @@ export default function Dashboard() {
           {organisations.map((organisation) => (
             <Card
               key={organisation._id}
-              className="hover:shadow-lg transition-all duration-200 cursor-pointer group"
-              onClick={() => router.push(`/organisation/${organisation._id}`)}
+              className={`hover:shadow-lg transition-all duration-200 cursor-pointer group ${!organisation.isOwner ? 'opacity-60' : ''}`}
+              onClick={() => organisation.isOwner && router.push(`/organisation/${organisation._id}`)}
             >
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-xl flex items-center gap-2">
                   <Building2 className="h-5 w-5 text-primary" />
                   {organisation.name}
+                  {!organisation.isOwner && (
+                    <span className="text-xs font-normal text-muted-foreground">(View Only)</span>
+                  )}
                 </CardTitle>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteOrganisation(organisation._id);
-                  }}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+                {organisation.isOwner && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteOrganisation(organisation._id);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                )}
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Join Code:</span>
                     <span className="font-mono font-semibold">{organisation.joinCode}</span>
@@ -218,6 +251,20 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Created:</span>
                     <span>{new Date(organisation.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  <div 
+                    className="flex items-center justify-between pt-2 border-t"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Online Presence</span>
+                    </div>
+                    <Switch
+                      checked={organisation.isOnlinePresenceEnabled}
+                      onCheckedChange={() => organisation.isOwner && toggleOnlinePresence(organisation._id, organisation.isOnlinePresenceEnabled)}
+                      disabled={!organisation.isOwner}
+                    />
                   </div>
                 </div>
               </CardContent>
