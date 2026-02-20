@@ -36,10 +36,10 @@ export async function GET(request: NextRequest) {
     const organisations = await Organisation.find({})
       .sort({ createdAt: -1 });
 
-    // Add isOwner flag to each organisation
+    // Add isOwner flag to each organisation (guard in case owner is missing on some docs)
     const organisationsWithOwnership = organisations.map(org => ({
       ...org.toObject(),
-      isOwner: org.owner.toString() === dummyOwnerId.toString()
+      isOwner: org.owner?.toString() === dummyOwnerId.toString()
     }));
 
     return NextResponse.json({ success: true, data: organisationsWithOwnership });
