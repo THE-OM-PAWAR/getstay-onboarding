@@ -4,6 +4,7 @@ export interface IHostel extends Document {
   name: string;
   description?: string;
   organisation: mongoose.Types.ObjectId;
+  city?: mongoose.Types.ObjectId;
   rentGenerationDay: string;
   rentGenerationEnabled: boolean;
   paymentGenerationType: 'global' | 'join_date_based';
@@ -27,6 +28,11 @@ const hostelSchema = new Schema<IHostel>(
       type: Schema.Types.ObjectId,
       ref: 'Organisation',
       required: [true, 'Please provide a organisation ID'],
+    },
+    city: {
+      type: Schema.Types.ObjectId,
+      ref: 'City',
+      required: false,
     },
     rentGenerationDay: {
       type: String,

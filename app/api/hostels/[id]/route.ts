@@ -11,7 +11,9 @@ export async function GET(
   try {
     await connectDB();
 
-    const hostel = await Hostel.findById(params.id).populate('organisation');
+    const hostel = await Hostel.findById(params.id)
+      .populate('organisation')
+      .populate('city', 'name state slug');
 
     if (!hostel) {
       return NextResponse.json(

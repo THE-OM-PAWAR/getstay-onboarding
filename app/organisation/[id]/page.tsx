@@ -16,14 +16,34 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Plus, Building, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Building, Trash2, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface Hostel {
   _id: string;
   name: string;
   description?: string;
+  city?: {
+    _id: string;
+    name: string;
+    state: string;
+    slug: string;
+  };
   createdAt: string;
+}
+
+interface City {
+  _id: string;
+  name: string;
+  state: string;
+  slug: string;
 }
 
 interface Organisation {
@@ -39,16 +59,31 @@ export default function OrganisationDetailPage() {
 
   const [organisation, setOrganisation] = useState<Organisation | null>(null);
   const [hostels, setHostels] = useState<Hostel[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({ name: '', description: '' });
+  const [formData, setFormData] = useState({ name: '', description: '', city: '' });
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (organisationId) {
       fetchOrganisationAndHostels();
+      fetchCities();
     }
   }, [organisationId]);
+
+  const fetchCities = async () => {
+    try {
+      const response = await fetch('/api/cities');
+      const data = await response.json();
+      
+      if (data.success) {
+        setCities(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch cities:', error);
+    }
+  };
 
   const fetchOrganisationAndHostels = async () => {
     try {
@@ -90,7 +125,7 @@ export default function OrganisationDetailPage() {
       if (data.success) {
         toast.success('Hostel created successfully');
         setDialogOpen(false);
-        setFormData({ name: '', description: '' });
+        setFormData({ name: '', description: '', city: '' });
         fetchOrganisationAndHostels();
       } else {
         toast.error(data.error || 'Failed to create hostel');
@@ -181,6 +216,31 @@ export default function OrganisationDetailPage() {
                       required
                     />
                   </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="city">City</Label>
+                    <Select
+                      value={formData.city}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, city: value })
+                      }
+                    >
+                      <SelectTrigger id="city">
+                        <SelectValue placeholder="Select a city" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cities.map((city) => (
+                          <SelectItem key={city._id} value={city._id}>
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4" />
+                              <span>{city.name}, {city.state}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
                   <div className="space-y-2">
                     <Label htmlFor="description">Description (Optional)</Label>
                     <Textarea
@@ -250,6 +310,12 @@ export default function OrganisationDetailPage() {
                     <p className="text-sm text-muted-foreground">
                       {hostel.description}
                     </p>
+                  )}
+                  {hostel.city && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <MapPin className="h-4 w-4" />
+                      <span>{hostel.city.name}, {hostel.city.state}</span>
+                    </div>
                   )}
                   <div className="flex items-center justify-between text-sm pt-2">
                     <span className="text-muted-foreground">Created:</span>

@@ -18,7 +18,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const hostels = await Hostel.find({ organisation: organisationId }).sort({ createdAt: -1 });
+    const hostels = await Hostel.find({ organisation: organisationId })
+      .populate('city', 'name state slug')
+      .sort({ createdAt: -1 });
 
     return NextResponse.json({ success: true, data: hostels });
   } catch (error: any) {
@@ -37,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     console.log('Request body:', body);
-    const { name, description, organisationId } = body;
+    const { name, description, organisationId, city } = body;
 
     if (!name || !organisationId) {
       return NextResponse.json(
@@ -54,11 +56,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const hostel = await Hostel.create({
+    // Validate city if provided
+    if (city && !mongoose.Types.ObjectId.isValid(city)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid city ID format' },
+        { status: 400 }
+      );
+    }
+
+    const hostelData: any = {
       name,
       description,
       organisation: organisationId,
-    });
+    };
+
+    // Add city if provided
+    if (city) {
+      hostelData.city = city;
+    }
+
+    const hostel = await Hostel.create(hostelData);
 
     console.log('Hostel created successfully:', hostel._id);
 
