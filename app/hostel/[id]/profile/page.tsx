@@ -56,9 +56,17 @@ interface HostelPhoto {
   isMain?: boolean;
 }
 
+interface City {
+  _id: string;
+  name: string;
+  slug: string;
+  state: string;
+}
+
 interface HostelProfile {
   _id?: string;
   slug?: string;
+  city?: string; // City ID reference
   basicInfo: {
     name: string;
     description: string;
@@ -138,6 +146,8 @@ export default function HostelProfilePage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [hostelInfo, setHostelInfo] = useState<any>(null);
+  const [cities, setCities] = useState<City[]>([]);
+  const [loadingCities, setLoadingCities] = useState(true);
   const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(false);
   const [slugInput, setSlugInput] = useState("");
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
@@ -151,6 +161,7 @@ export default function HostelProfilePage() {
   
   const [profile, setProfile] = useState<HostelProfile>({
     slug: "",
+    city: "",
     basicInfo: {
       name: "",
       description: "",
@@ -186,7 +197,23 @@ export default function HostelProfilePage() {
 
   useEffect(() => {
     fetchHostelProfile();
+    fetchCities();
   }, [params.id]);
+
+  const fetchCities = async () => {
+    try {
+      const response = await fetch('/api/cities');
+      const data = await response.json();
+      if (data.success) {
+        setCities(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching cities:', error);
+      toast.error('Failed to load cities');
+    } finally {
+      setLoadingCities(false);
+    }
+  };
 
   useEffect(() => {
     // Initialize slug input when profile loads
@@ -685,18 +712,53 @@ export default function HostelProfilePage() {
               />
             </div>
             
-              <div className="space-y-2">
-                <Label htmlFor="city">City</Label>
-                <Input
-                  id="city"
+            <div className="space-y-2">
+              <Label htmlFor="citySelect">City <span className="text-red-500">*</span></Label>
+              <Select
+                value={profile.city || ""}
+                onValueChange={(value) => {
+                  const selectedCity = cities.find(c => c._id === value);
+                  setProfile(prev => ({
+                    ...prev,
+                    city: value,
+                    basicInfo: {
+                      ...prev.basicInfo,
+                      city: selectedCity?.name || "",
+                      state: selectedCity?.state || prev.basicInfo.state,
+                    }
+                  }));
+                }}
+                disabled={loadingCities}
+              >
+                <SelectTrigger id="citySelect">
+                  <SelectValue placeholder={loadingCities ? "Loading cities..." : "Select a city"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {cities.map((city) => (
+                    <SelectItem key={city._id} value={city._id}>
+                      {city.name}, {city.state}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="city">City Name (Text)</Label>
+              <Input
+                id="city"
                 value={profile.basicInfo.city}
                 onChange={(e) => setProfile(prev => ({
                   ...prev,
                   basicInfo: { ...prev.basicInfo, city: e.target.value }
                 }))}
                 placeholder="Enter city"
-                />
-              </div>
+                disabled={!!profile.city}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
               <div className="space-y-2">
                 <Label htmlFor="state">State</Label>
@@ -710,9 +772,6 @@ export default function HostelProfilePage() {
                 placeholder="Enter state"
                 />
               </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
               <Label htmlFor="pincode">PIN Code</Label>
                 <Input

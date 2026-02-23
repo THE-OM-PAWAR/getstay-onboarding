@@ -11,6 +11,7 @@ interface HostelPhoto {
 export interface IHostelProfile extends Document {
   hostel: mongoose.Types.ObjectId;
   slug?: string; // Made optional to support existing profiles
+  city?: mongoose.Types.ObjectId; // Reference to City model
   basicInfo: {
     name: string;
     description: string;
@@ -91,6 +92,11 @@ const hostelProfileSchema = new Schema<IHostelProfile>(
       trim: true,
       lowercase: true,
       match: [/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug can only contain lowercase letters, numbers, and hyphens'],
+    },
+    city: {
+      type: Schema.Types.ObjectId,
+      ref: 'City',
+      required: false,
     },
     basicInfo: {
       name: { type: String, required: true },

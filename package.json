@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "migrate:city": "tsx scripts/migrate-hostel-profile-city.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
