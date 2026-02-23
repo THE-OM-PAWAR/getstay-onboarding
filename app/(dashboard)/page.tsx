@@ -105,8 +105,15 @@ export default function Dashboard() {
 
   const toggleOnlinePresence = async (id: string, currentStatus: boolean) => {
     try {
-      console.log('Toggling online presence for:', id, 'Current status:', currentStatus, 'New status:', !currentStatus);
-      
+      console.log(
+        'Toggling online presence for:',
+        id,
+        'Current status:',
+        currentStatus,
+        'New status:',
+        !currentStatus
+      );
+
       const response = await fetch(`/api/organisations/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -217,15 +224,21 @@ export default function Dashboard() {
           {organisations.map((organisation) => (
             <Card
               key={organisation._id}
-              className={`hover:shadow-lg transition-all duration-200 cursor-pointer group ${!organisation.isOwner ? 'opacity-60' : ''}`}
-              onClick={() => organisation.isOwner && router.push(`/organisation/${organisation._id}`)}
+              className={`hover:shadow-lg transition-all duration-200 cursor-pointer group ${
+                !organisation.isOwner ? 'opacity-60' : ''
+              }`}
+              onClick={() =>
+                organisation.isOwner && router.push(`/organisation/${organisation._id}`)
+              }
             >
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-xl flex items-center gap-2">
                   <Building2 className="h-5 w-5 text-primary" />
                   {organisation.name}
                   {!organisation.isOwner && (
-                    <span className="text-xs font-normal text-muted-foreground">(View Only)</span>
+                    <span className="text-xs font-normal text-muted-foreground">
+                      (View Only)
+                    </span>
                   )}
                 </CardTitle>
                 {organisation.isOwner && (
@@ -246,23 +259,35 @@ export default function Dashboard() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Join Code:</span>
-                    <span className="font-mono font-semibold">{organisation.joinCode}</span>
+                    <span className="font-mono font-semibold">
+                      {organisation.joinCode}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Created:</span>
-                    <span>{new Date(organisation.createdAt).toLocaleDateString()}</span>
+                    <span>
+                      {new Date(organisation.createdAt).toLocaleDateString()}
+                    </span>
                   </div>
-                  <div 
+                  <div
                     className="flex items-center justify-between pt-2 border-t"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex items-center gap-2">
                       <Globe className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">Online Presence</span>
+                      <span className="text-sm text-muted-foreground">
+                        Online Presence
+                      </span>
                     </div>
                     <Switch
                       checked={organisation.isOnlinePresenceEnabled}
-                      onCheckedChange={() => organisation.isOwner && toggleOnlinePresence(organisation._id, organisation.isOnlinePresenceEnabled)}
+                      onCheckedChange={() =>
+                        organisation.isOwner &&
+                        toggleOnlinePresence(
+                          organisation._id,
+                          organisation.isOnlinePresenceEnabled
+                        )
+                      }
                       disabled={!organisation.isOwner}
                     />
                   </div>
@@ -275,3 +300,4 @@ export default function Dashboard() {
     </div>
   );
 }
+

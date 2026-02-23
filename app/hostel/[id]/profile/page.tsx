@@ -58,6 +58,7 @@ interface HostelPhoto {
 
 interface HostelProfile {
   _id?: string;
+  slug?: string;
   basicInfo: {
     name: string;
     description: string;
@@ -138,6 +139,9 @@ export default function HostelProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [hostelInfo, setHostelInfo] = useState<any>(null);
   const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(false);
+  const [slugInput, setSlugInput] = useState("");
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
+  const [checkingSlug, setCheckingSlug] = useState(false);
   const [photoForm, setPhotoForm] = useState({
     title: "",
     description: "",
@@ -146,6 +150,7 @@ export default function HostelProfilePage() {
   });
   
   const [profile, setProfile] = useState<HostelProfile>({
+    slug: "",
     basicInfo: {
       name: "",
       description: "",
@@ -182,6 +187,83 @@ export default function HostelProfilePage() {
   useEffect(() => {
     fetchHostelProfile();
   }, [params.id]);
+
+  useEffect(() => {
+    // Initialize slug input when profile loads
+    if (profile.slug) {
+      setSlugInput(profile.slug);
+      setSlugAvailable(true);
+    } else if (profile.basicInfo.name && !slugInput) {
+      // Auto-generate slug for existing profiles without one
+      const generatedSlug = generateSlugFromName(profile.basicInfo.name);
+      setSlugInput(generatedSlug);
+      checkSlugAvailability(generatedSlug);
+    }
+  }, [profile.slug, profile.basicInfo.name]);
+
+  const generateSlugFromName = (name: string): string => {
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  };
+
+  const handleGenerateSlug = () => {
+    const generatedSlug = generateSlugFromName(profile.basicInfo.name || 'hostel');
+    setSlugInput(generatedSlug);
+    checkSlugAvailability(generatedSlug);
+  };
+
+  const checkSlugAvailability = async (slug: string) => {
+    if (!slug || slug.length < 3) {
+      setSlugAvailable(null);
+      return;
+    }
+
+    setCheckingSlug(true);
+    try {
+      const response = await fetch('/api/hostel-profile/check-slug', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          slug,
+          excludeHostelId: params.id,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setSlugAvailable(data.available);
+      } else {
+        setSlugAvailable(false);
+      }
+    } catch (error) {
+      console.error('Error checking slug:', error);
+      setSlugAvailable(null);
+    } finally {
+      setCheckingSlug(false);
+    }
+  };
+
+  const handleSlugChange = (value: string) => {
+    const formattedSlug = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    setSlugInput(formattedSlug);
+    
+    // Debounce slug availability check
+    if (formattedSlug.length >= 3) {
+      const timeoutId = setTimeout(() => {
+        checkSlugAvailability(formattedSlug);
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    } else {
+      setSlugAvailable(null);
+    }
+  };
 
   const fetchHostelProfile = async () => {
     if (!params.id) return;
@@ -225,14 +307,30 @@ export default function HostelProfilePage() {
   };
 
   const handleSave = async () => {
+    // Validate slug before saving
+    if (!slugInput || slugInput.length < 3) {
+      toast.error("Please provide a valid slug (minimum 3 characters)");
+      return;
+    }
+
+    if (slugAvailable === false) {
+      toast.error("This slug is already taken. Please choose another one.");
+      return;
+    }
+
     setSaving(true);
     try {
+      const profileData = {
+        ...profile,
+        slug: slugInput,
+      };
+
       const response = await fetch(`/api/hostels/${params.id}/profile`, {
         method: profile._id ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(profile),
+        body: JSON.stringify(profileData),
       });
 
       const data = await response.json();
@@ -490,6 +588,59 @@ export default function HostelProfilePage() {
                 placeholder="Enter contact number"
               />
             </div>
+          </div>
+
+          {/* Slug Field */}
+          <div className="space-y-2">
+            <Label htmlFor="slug">
+              Hostel Slug <span className="text-red-500">*</span>
+            </Label>
+            <p className="text-sm text-muted-foreground">
+              A unique URL-friendly identifier for this hostel (e.g., "my-hostel-name")
+            </p>
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <Input
+                  id="slug"
+                  value={slugInput}
+                  onChange={(e) => handleSlugChange(e.target.value)}
+                  placeholder="enter-hostel-slug"
+                  className={
+                    slugAvailable === true 
+                      ? "border-green-500" 
+                      : slugAvailable === false 
+                      ? "border-red-500" 
+                      : ""
+                  }
+                />
+                {checkingSlug && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                    Checking...
+                  </span>
+                )}
+                {!checkingSlug && slugAvailable === true && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-green-600">
+                    ✓ Available
+                  </span>
+                )}
+                {!checkingSlug && slugAvailable === false && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-red-600">
+                    ✗ Taken
+                  </span>
+                )}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleGenerateSlug}
+                disabled={!profile.basicInfo.name}
+              >
+                Generate
+              </Button>
+            </div>
+            {slugInput && slugInput.length < 3 && (
+              <p className="text-sm text-red-500">Slug must be at least 3 characters</p>
+            )}
           </div>
 
               <div className="space-y-2">

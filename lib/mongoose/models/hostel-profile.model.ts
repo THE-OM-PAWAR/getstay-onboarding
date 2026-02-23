@@ -10,6 +10,7 @@ interface HostelPhoto {
 
 export interface IHostelProfile extends Document {
   hostel: mongoose.Types.ObjectId;
+  slug?: string; // Made optional to support existing profiles
   basicInfo: {
     name: string;
     description: string;
@@ -81,6 +82,15 @@ const hostelProfileSchema = new Schema<IHostelProfile>(
       ref: 'Hostel',
       required: true,
       unique: true,
+    },
+    slug: {
+      type: String,
+      required: false, // Made optional to support existing profiles
+      unique: true,
+      sparse: true, // Allows multiple null values but enforces uniqueness for non-null values
+      trim: true,
+      lowercase: true,
+      match: [/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug can only contain lowercase letters, numbers, and hyphens'],
     },
     basicInfo: {
       name: { type: String, required: true },
