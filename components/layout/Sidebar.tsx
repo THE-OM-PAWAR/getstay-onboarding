@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Building2, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { LogoutButton } from '@/components/logout-button';
 
 const navItems = [
   {
@@ -54,6 +55,9 @@ export function Sidebar() {
           );
         })}
       </nav>
+      <div className="p-4 border-t">
+        <LogoutButton />
+      </div>
     </aside>
   );
 }
