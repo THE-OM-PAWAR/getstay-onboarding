@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -67,6 +68,7 @@ interface HostelProfile {
   _id?: string;
   slug?: string;
   city?: string; // City ID reference
+  isOnlinePresenceEnabled?: boolean;
   basicInfo: {
     name: string;
     description: string;
@@ -162,6 +164,7 @@ export default function HostelProfilePage() {
   const [profile, setProfile] = useState<HostelProfile>({
     slug: "",
     city: "",
+    isOnlinePresenceEnabled: true,
     basicInfo: {
       name: "",
       description: "",
@@ -799,6 +802,26 @@ export default function HostelProfilePage() {
                 />
               </div>
             </div>
+
+          <Separator />
+
+          {/* Online Presence Toggle */}
+          <div className="flex items-center justify-between space-x-2">
+            <div className="space-y-0.5">
+              <Label htmlFor="onlinePresence">Online Presence</Label>
+              <p className="text-sm text-muted-foreground">
+                Enable this hostel to be visible on the public website
+              </p>
+            </div>
+            <Switch
+              id="onlinePresence"
+              checked={profile.isOnlinePresenceEnabled ?? true}
+              onCheckedChange={(checked) => setProfile(prev => ({
+                ...prev,
+                isOnlinePresenceEnabled: checked
+              }))}
+            />
+          </div>
           </CardContent>
         </Card>
 

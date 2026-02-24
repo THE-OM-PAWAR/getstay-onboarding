@@ -10,25 +10,26 @@ interface HostelPhoto {
 
 export interface IHostelProfile extends Document {
   hostel: mongoose.Types.ObjectId;
-  slug?: string; // Made optional to support existing profiles
-  city?: mongoose.Types.ObjectId; // Reference to City model
+  slug?: string;
+  city?: mongoose.Types.ObjectId;
+  isOnlinePresenceEnabled: boolean;
   basicInfo: {
     name: string;
-    description: string;
-    address: string;
-    landmark: string;
-    city: string;
-    state: string;
-    pincode: string;
-    contactNumber: string;
-    email: string;
+    description?: string;
+    address?: string;
+    landmark?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+    contactNumber?: string;
+    email?: string;
   };
   propertyDetails: {
-    totalFloors: number;
-    totalRooms: number;
-    accommodationType: 'boys' | 'girls' | 'coed' | 'separate';
+    totalFloors?: number;
+    totalRooms?: number;
+    accommodationType?: 'boys' | 'girls' | 'coed' | 'separate';
     establishedYear?: number;
-    buildingType: 'independent' | 'apartment' | 'commercial';
+    buildingType?: 'independent' | 'apartment' | 'commercial';
   };
   locationInfo: {
     googleMapLink?: string;
@@ -86,9 +87,9 @@ const hostelProfileSchema = new Schema<IHostelProfile>(
     },
     slug: {
       type: String,
-      required: false, // Made optional to support existing profiles
+      required: false,
       unique: true,
-      sparse: true, // Allows multiple null values but enforces uniqueness for non-null values
+      sparse: true,
       trim: true,
       lowercase: true,
       match: [/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug can only contain lowercase letters, numbers, and hyphens'],
@@ -98,30 +99,34 @@ const hostelProfileSchema = new Schema<IHostelProfile>(
       ref: 'City',
       required: false,
     },
+    isOnlinePresenceEnabled: {
+      type: Boolean,
+      default: true,
+    },
     basicInfo: {
       name: { type: String, required: true },
       description: { type: String, default: '' },
-      address: { type: String, required: true },
+      address: { type: String, default: '' },
       landmark: { type: String, default: '' },
-      city: { type: String, required: true },
-      state: { type: String, required: true },
-      pincode: { type: String, required: true },
-      contactNumber: { type: String, required: true },
-      email: { type: String, required: true },
+      city: { type: String, default: '' },
+      state: { type: String, default: '' },
+      pincode: { type: String, default: '' },
+      contactNumber: { type: String, default: '' },
+      email: { type: String, default: '' },
     },
     propertyDetails: {
-      totalFloors: { type: Number, required: true, min: 1 },
-      totalRooms: { type: Number, required: true, min: 1 },
+      totalFloors: { type: Number, min: 1, default: 1 },
+      totalRooms: { type: Number, min: 1, default: 1 },
       accommodationType: {
         type: String,
         enum: ['boys', 'girls', 'coed', 'separate'],
-        required: true,
+        default: 'boys',
       },
       establishedYear: { type: Number },
       buildingType: {
         type: String,
         enum: ['independent', 'apartment', 'commercial'],
-        required: true,
+        default: 'independent',
       },
     },
     locationInfo: {
@@ -168,5 +173,9 @@ const hostelProfileSchema = new Schema<IHostelProfile>(
   }
 );
 
-export const HostelProfile = (mongoose.models.HostelProfile as Model<IHostelProfile>) ||
-  mongoose.model<IHostelProfile>('HostelProfile', hostelProfileSchema);
+// Delete the model if it exists to ensure schema updates are applied
+if (mongoose.models.HostelProfile) {
+  delete mongoose.models.HostelProfile;
+}
+
+export const HostelProfile = mongoose.model<IHostelProfile>('HostelProfile', hostelProfileSchema);

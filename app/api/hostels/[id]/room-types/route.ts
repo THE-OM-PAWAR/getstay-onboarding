@@ -39,6 +39,7 @@ export async function POST(
     await connectDB();
 
     const hostelId = params.id;
+    console.log(hostelId)
     const body = await request.json();
     const { name, description, components, rent, images } = body;
 
@@ -90,11 +91,14 @@ export async function POST(
       images: images || [],
     });
 
+    console.log(roomType)
+
     // Populate the components for response
     await roomType.populate('components', 'name description');
 
     return NextResponse.json({ success: true, data: roomType }, { status: 201 });
   } catch (error: any) {
+    console.log(error)
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }

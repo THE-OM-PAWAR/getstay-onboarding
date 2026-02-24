@@ -11,7 +11,7 @@ export interface IRoomType extends Document {
   description: string;
   components: mongoose.Types.ObjectId[];
   rent: number;
-  organisationId: string;
+  hostelId: string;
   images: RoomTypeImage[];
   createdAt: Date;
   updatedAt: Date;
@@ -50,9 +50,9 @@ const roomTypeSchemaDefinition: mongoose.SchemaDefinition = {
     required: [true, 'Please provide the monthly rent'],
     min: 0,
   },
-  organisationId: {
+  hostelId: {
     type: String,
-    required: [true, 'Please provide a organisation ID'],
+    required: [true, 'Please provide a hostel ID'],
   },
   images: [roomTypeImageSchema],
 };
