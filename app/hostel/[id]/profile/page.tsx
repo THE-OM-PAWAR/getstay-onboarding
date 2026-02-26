@@ -103,6 +103,10 @@ interface HostelProfile {
     }>;
   };
   media: {
+    banner?: {
+      url: string;
+      publicId: string;
+    };
     photos: HostelPhoto[];
     virtualTourLink?: string;
   };
@@ -147,6 +151,8 @@ export default function HostelProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [deletingBanner, setDeletingBanner] = useState(false);
   const [hostelInfo, setHostelInfo] = useState<any>(null);
   const [cities, setCities] = useState<City[]>([]);
   const [loadingCities, setLoadingCities] = useState(true);
@@ -191,6 +197,7 @@ export default function HostelProfilePage() {
       transportConnectivity: [],
     },
     media: {
+      banner: undefined,
       photos: [],
       virtualTourLink: "",
     },
@@ -430,6 +437,74 @@ export default function HostelProfilePage() {
       toast.error(error.message || "Failed to upload photo");
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleBannerUpload = async (file: File) => {
+    setUploadingBanner(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "hostel-banners");
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to upload banner");
+      }
+
+      setProfile(prev => ({
+        ...prev,
+        media: {
+          ...prev.media,
+          banner: {
+            url: result.secure_url,
+            publicId: result.public_id,
+          },
+        }
+      }));
+
+      toast.success("Banner uploaded successfully");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to upload banner");
+    } finally {
+      setUploadingBanner(false);
+    }
+  };
+
+  const handleBannerDelete = async () => {
+    if (!profile.media.banner) return;
+
+    setDeletingBanner(true);
+    try {
+      const response = await fetch(`/api/hostels/${params.id}/profile/banner`, {
+        method: "DELETE",
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to delete banner");
+      }
+
+      setProfile(prev => ({
+        ...prev,
+        media: {
+          ...prev.media,
+          banner: undefined,
+        }
+      }));
+
+      toast.success("Banner deleted successfully");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete banner");
+    } finally {
+      setDeletingBanner(false);
     }
   };
 
@@ -1136,6 +1211,116 @@ export default function HostelProfilePage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Banner Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-medium">Hostel Banner</h3>
+                <p className="text-sm text-muted-foreground">
+                  Upload a banner image for your hostel (recommended: 1920x600px)
+                </p>
+              </div>
+            </div>
+            
+            {profile.media.banner ? (
+              <div className="relative group">
+                <div className="aspect-[16/5] rounded-lg overflow-hidden border">
+                  <img
+                    src={profile.media.banner.url}
+                    alt="Hostel Banner"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                  <label htmlFor="bannerChange">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      disabled={uploadingBanner}
+                      onClick={() => document.getElementById('bannerChange')?.click()}
+                      type="button"
+                    >
+                      {uploadingBanner ? (
+                        "Uploading..."
+                      ) : (
+                        <>
+                          <Upload className="h-3 w-3 mr-1" />
+                          Change
+                        </>
+                      )}
+                    </Button>
+                  </label>
+                  <input
+                    id="bannerChange"
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleBannerUpload(file);
+                      }
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={handleBannerDelete}
+                    disabled={deletingBanner}
+                  >
+                    {deletingBanner ? (
+                      "Deleting..."
+                    ) : (
+                      <>
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Delete
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8">
+                <div className="text-center">
+                  <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground mb-4">No banner uploaded yet</p>
+                  <div className="flex justify-center">
+                    <label htmlFor="bannerUpload">
+                      <Button
+                        type="button"
+                        disabled={uploadingBanner}
+                        onClick={() => document.getElementById('bannerUpload')?.click()}
+                      >
+                        {uploadingBanner ? (
+                          "Uploading..."
+                        ) : (
+                          <>
+                            <Upload className="h-4 w-4 mr-2" />
+                            Upload Banner
+                          </>
+                        )}
+                      </Button>
+                    </label>
+                    <input
+                      id="bannerUpload"
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleBannerUpload(file);
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium">Hostel Photos</h3>

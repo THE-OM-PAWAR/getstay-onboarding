@@ -47,6 +47,10 @@ export interface IHostelProfile extends Document {
     }>;
   };
   media: {
+    banner?: {
+      url: string;
+      publicId: string;
+    };
     photos: HostelPhoto[];
     virtualTourLink?: string;
   };
@@ -153,6 +157,10 @@ const hostelProfileSchema = new Schema<IHostelProfile>(
       }],
     },
     media: {
+      banner: {
+        url: { type: String },
+        publicId: { type: String },
+      },
       photos: [hostelPhotoSchema],
       virtualTourLink: { type: String },
     },
